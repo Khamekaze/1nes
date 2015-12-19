@@ -264,58 +264,59 @@ public class Grid {
 	
 	public void setSelectedBlock() {
 		if(Gdx.input.justTouched()) {
-		newRound = false;
-		endRound = false;
-		int selectedAmount = 0;
-		for(Block b : blocks) {
-			if(b.isSelected())
-				selectedAmount++;
-		}
-		
-		for(GridBlock g : gridBlocks) {
+			newRound = false;
+			endRound = false;
+			int selectedAmount = 0;
 			for(Block b : blocks) {
-				if(b.isMovable()) {
-					if(Gdx.input.justTouched() && b.isActive() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(b.getHitbox())) {
-						if(selectedAmount == 1 && selectedBlock != null && selectedBlock.equals(b) && !selectedNew) {
-							b.setSelected(false);
-							endRound = true;
-							newRound = false;
+				if(b.isSelected())
+					selectedAmount++;
+			}
+
+			for(GridBlock g : gridBlocks) {
+				for(Block b : blocks) {
+//					if(b.isMovable()) {
+						if(Gdx.input.justTouched() && b.isActive() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(b.getHitbox())) {
+							if(selectedAmount == 1 && selectedBlock != null && selectedBlock.equals(b) && !selectedNew) {
+								b.setSelected(false);
+								endRound = true;
+								newRound = false;
+							}
+
+							if(selectedAmount == 0) {
+								b.setSelected(true);
+								selectedBlock = b;
+								selectedBlock.setSelected(true);
+							}
+
+						} else if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(g.getHitBox()) && !g.isOccupied() && g.isAvailable()) {
+							if(!moved && b.isSelected()) {
+								if(g.getX() > b.getX() && g.getY() == b.getY()) {
+									direction = b.right;
+									b.setMovable(false);
+								} else if(g.getX() < b.getX() && g.getY() == b.getY()) {
+									direction = b.left;
+									b.setMovable(false);
+								} else if(g.getY() > b.getY() && g.getX() == b.getX()) {
+									direction = b.up;
+									b.setMovable(false);
+								} else if(g.getY() < b.getY() && g.getX() == b.getX()) {
+									direction = b.down;
+									b.setMovable(false);
+								}
+							}
 						}
 						
-						if(selectedAmount == 0) {
-							b.setSelected(true);
-							selectedBlock = b;
-							selectedBlock.setSelected(true);
-						}
-						
-						if(selectedAmount == 1 && selectedBlock != null && !b.equals(selectedBlock)) {
-							if(g.isOccupied() && selectedBlock.isSelected() && g.isAvailable()) {
+					if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(g.getHitBox()) && g.isOccupied() && g.isAvailable()) {
+						if(selectedAmount == 1 && selectedBlock != null && g.getValue() == selectedBlock.getValue()) {
+							if(b.getX() == g.getX() && b.getY() == g.getY()) {
 								merge(b, selectedBlock);
 								endRound = true;
 								newRound = false;
 							}
 						}
-						
-					} else if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(g.getHitBox()) && !g.isOccupied() && g.isAvailable()) {
-						if(!moved && b.isSelected()) {
-							if(g.getX() > b.getX() && g.getY() == b.getY()) {
-								direction = b.right;
-								b.setMovable(false);
-							} else if(g.getX() < b.getX() && g.getY() == b.getY()) {
-								direction = b.left;
-								b.setMovable(false);
-							} else if(g.getY() > b.getY() && g.getX() == b.getX()) {
-								direction = b.up;
-								b.setMovable(false);
-							} else if(g.getY() < b.getY() && g.getX() == b.getX()) {
-								direction = b.down;
-								b.setMovable(false);
-							}
-						}
 					}
 				}
 			}
-		}
 		}
 	}
 	
@@ -461,7 +462,7 @@ public class Grid {
 		for(GridBlock g : gridBlocks) {
 			for(Block b : blocks) {
 				if(b.isSelected()) {
-					if(g.getX() > b.getX() && g.getX() < b.getX() + 100 && 
+					if(g.getX() > b.getX() && g.getX() <= b.getX() + 96 && 
 							g.getY() == b.getY()) {
 						//RIGHT OF BLOCK
 						if(!g.isOccupied() && g.getValue() == 0)
@@ -471,8 +472,7 @@ public class Grid {
 						} else if(g.isOccupied() && g.getValue() == b.getValue()) {
 							g.setAvailable(true);
 						}
-					}
-					if(g.getX() < b.getX() && g.getX() > b.getX() - 100 && 
+					} else if(g.getX() < b.getX() && g.getX() >= b.getX() - 96 && 
 							g.getY() == b.getY()) {
 						//LEFT OF BLOCK
 						if(!g.isOccupied() && g.getValue() == 0)
@@ -482,8 +482,8 @@ public class Grid {
 						} else if(g.isOccupied() && g.getValue() == b.getValue()) {
 							g.setAvailable(true);
 						}
-					}
-					if(g.getY() > b.getY() && g.getY() < b.getY() + 100 && g.getX() == b.getX()) {
+					} else if(g.getY() > b.getY() && g.getY() <= b.getY() + 96 &&
+							g.getX() == b.getX()) {
 						//ABOVE BLOCK
 						if(!g.isOccupied() && g.getValue() == 0)
 							g.setAvailable(true);
@@ -492,8 +492,8 @@ public class Grid {
 						} else if(g.isOccupied() && g.getValue() == b.getValue()) {
 							g.setAvailable(true);
 						}
-					}
-					if(g.getY() < b.getY() && g.getY() > b.getY() - 100 && g.getX() == b.getX()) {
+					} else if(g.getY() < b.getY() && g.getY() >= b.getY() - 96 &&
+							g.getX() == b.getX()) {
 						if(!g.isOccupied() && g.getValue() == 0)
 							g.setAvailable(true);
 						else if(g.isOccupied() && g.getValue() != b.getValue()) {
@@ -501,26 +501,30 @@ public class Grid {
 						} else if(g.isOccupied() && g.getValue() == b.getValue()) {
 							g.setAvailable(true);
 						}
+					} else if(g.getX() != b.getX() && g.getY() != g.getY()) {
+						g.setAvailable(false);
 					}
 				} else if(!b.isSelected() && b.isActive()) {
-					if(g.getX() > b.getX() && g.getX() < b.getX() + 100 && 
+					if(g.getX() > b.getX() && g.getX() <= b.getX() + 96 && 
 							g.getY() == b.getY()) {
 						//RIGHT OF BLOCK
 						if(g.isOccupied() && g.getValue() != b.getValue())
 							blocksBlocked += 1;
 					}
-					if(g.getX() < b.getX() && g.getX() > b.getX() - 100 && 
+					if(g.getX() < b.getX() && g.getX() >= b.getX() - 96 && 
 							g.getY() == b.getY()) {
 						//LEFT OF BLOCK
 						if(g.isOccupied() && g.getValue() != b.getValue())
 							blocksBlocked += 1;
 					}
-					if(g.getY() > b.getY() && g.getY() < b.getY() + 100 && g.getX() == b.getX()) {
+					if(g.getY() > b.getY() && g.getY() <= b.getY() + 96 &&
+							g.getX() == b.getX()) {
 						//ABOVE BLOCK
 						if(g.isOccupied() && g.getValue() != b.getValue())
 							blocksBlocked += 1;
 					}
-					if(g.getY() < b.getY() && g.getY() > b.getY() - 100 && g.getX() == b.getX()) {
+					if(g.getY() < b.getY() && g.getY() >= b.getY() - 96 &&
+							g.getX() == b.getX()) {
 						//BELOW BLOCK
 						if(g.isOccupied() && g.getValue() != b.getValue())
 							blocksBlocked += 1;
@@ -538,8 +542,7 @@ public class Grid {
 	public void checkIfOccupied() {
 		for(GridBlock g : gridBlocks) {
 			for(Block b : blocks) {
-				if(b.getX() > g.getX() - 2 && b.getY() > g.getY() - 2 && b.getX() < g.getX() + 2 && b.getY() < g.getY() + 2
-						&& b.isActive() && !g.isOccupied()) {
+				if(b.getX() == g.getX() && b.getY() == g.getY()) {
 					g.setIsOccupied(true);
 					g.setValue(b.getValue());
 				}
@@ -590,15 +593,16 @@ public class Grid {
 		}
 		if(newRound && !endRound) {
 			freeGridBlocks.clear();
-			for(GridBlock g : gridBlocks) {
-				for(Block b : blocks) {
-					if(b.getX() > g.getX() - 2 && b.getY() > g.getY() - 2 && b.getX() < g.getX() + 2 && b.getY() < g.getY() + 2
-							&& b.isActive() && !g.isOccupied()) {
-						g.setIsOccupied(true);
-						g.setValue(b.getValue());
-					}
-				}
-			}
+//			for(GridBlock g : gridBlocks) {
+//				for(Block b : blocks) {
+//					if(b.getX() > g.getX() - 2 && b.getY() > g.getY() - 2 && b.getX() < g.getX() + 2 && b.getY() < g.getY() + 2
+//							&& b.isActive() && !g.isOccupied()) {
+//						g.setIsOccupied(true);
+//						g.setValue(b.getValue());
+//					}
+//				}
+//			}
+			checkIfOccupied();
 			
 			for(Block b : blocks) {
 				b.setMovable(true);

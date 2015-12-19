@@ -18,9 +18,10 @@ public class RestartButton {
 		sprite = new Sprite(new Texture(Gdx.files.internal("gui/restartsprite.png")));
 		this.x = x;
 		this.y = y;
-		this.width = sprite.getWidth();
-		this.height = sprite.getHeight();
+		this.width = sprite.getWidth() / 2;
+		this.height = sprite.getHeight() / 2;
 		hitBox = new Rectangle(x, y, width, height);
+		sprite.setSize(width, height);
 		sprite.setPosition(x, y);
 	}
 	

@@ -14,7 +14,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class TitleState {
 	
-	private Sprite logga, loading;
+	private Sprite logga, loading, howToImg;
 	private TitleButton play, howto;
 	private MenuButton menuButton;
 	private float cameraY = MainGame.HEIGHT / 2, cameraX = MainGame.WIDTH / 2;
@@ -28,9 +28,13 @@ public class TitleState {
 		logga.setPosition(0, MainGame.HEIGHT - logga.getHeight());
 		play = new TitleButton(MainGame.WIDTH / 2 - 175, MainGame.HEIGHT / 2 - 200, 150, 180, 0);
 		howto = new TitleButton(MainGame.WIDTH / 2 + 25, MainGame.HEIGHT / 2 - 200, 150, 180, 1);
-		menuButton = new MenuButton(MainGame.WIDTH / 2 - 125, 0 - MainGame.HEIGHT / 2 - 250);
+		menuButton = new MenuButton(MainGame.WIDTH / 2 - 125, 0 - MainGame.HEIGHT / 2 - 350);
 		loading = new Sprite(new Texture(Gdx.files.internal("loading.png")));
+		loading.setSize(MainGame.WIDTH, 250);
 		loading.setPosition(MainGame.WIDTH  + 210, MainGame.HEIGHT / 2);
+		howToImg = new Sprite(new Texture(Gdx.files.internal("title/howto.png")));
+		howToImg.setSize(420, 780);
+		howToImg.setPosition(0, 0 - MainGame.HEIGHT - 75);
 	}
 	
 	public void update() {
@@ -42,7 +46,6 @@ public class TitleState {
 			moveToHowTo = true;
 			moveToMenu = false;
 			cameraSpeed = 30f;
-			System.out.println("HOWTO");
 		} else if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(menuButton.getHitbox())) {
 			cameraSpeed = 30f;
 			moveToHowTo = false;
@@ -82,6 +85,7 @@ public class TitleState {
 		howto.render(sb);
 		menuButton.render(sb);
 		loading.draw(sb);
+		howToImg.draw(sb);
 		sb.end();
 	}
 	
