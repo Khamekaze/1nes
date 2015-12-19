@@ -1,134 +1,107 @@
 package com.almoatarknad.android;
 
 import com.almoatarknad.MainGame;
-import com.almoatarknad.googleplay.IGoogleServices;
-import com.badlogic.gdx.Gdx;
+import com.almoatarknad.ads.AdsController;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.google.android.gms.games.Games;
-import com.google.example.games.basegameutils.GameHelper.GameHelperListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 
-import android.R;
-import android.content.Intent;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
-import bin.classes.com.google.example.games.basegameutils.GameHelper;
+import android.provider.Settings.Secure;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 
 
 
-public class AndroidLauncher extends AndroidApplication implements IGoogleServices {
-	
-	private final static int REQUEST_CODE_UNUSED = 9002;
-
-	
-	private GameHelper _gameHelper;
+public class AndroidLauncher extends AndroidApplication implements AdsController {
+	private final int SHOW_ADS = 1;
+	private final int HIDE_ADS = 0;
+	private static final String AD_UNIT_ID_BANNER = "ca-app-pub-4335249035736245/697384081";
+	private static final String GOOGLE_PLAY_URL = "https://play.google.com/store/apps/developer?id=TheInvader360";
+	private static final String GITHUB_URL = "https://github.com/TheInvader360";
+	private static final String BLOG_URL = "http://theinvader360.blogspot.co.uk/";
+	public static AdView adView;
+	protected View gameView;
+	private InterstitialAd interstitialAd;
+	AdRequest.Builder adRequestBuilder;
+	private String android_id;
 	
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		_gameHelper = new GameHelper(this, GameHelper.CLIENT_GAMES);
-		_gameHelper.enableDebugLog(false);
-		
-		GameHelperListener gameHelperListener = new GameHelper.GameHelperListener() {
-			
-			@Override
-			public void onSignInSucceeded() {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void onSignInFailed() {
-				// TODO Auto-generated method stub
-				
-			}
-		};
-		
-		_gameHelper.setup(gameHelperListener);
-		
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
-		initialize(new MainGame(this), config);
+		config.useAccelerometer = false;
+		config.useCompass = false;
+		config.useGLSurfaceView20API18 = true;
+		android_id = Secure.getString(getContext().getContentResolver(),
+	            Secure.ANDROID_ID);
+		
+		System.out.println("ANDROID ID: " + android_id);
+		
+		RelativeLayout layout = new RelativeLayout(this);
+		
+		gameView = initializeForView(new MainGame(this), config);
+		setupAds();
+		
+		layout.addView(gameView, ViewGroup.LayoutParams.MATCH_PARENT,
+					   ViewGroup.LayoutParams.MATCH_PARENT);
+		
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.WRAP_CONTENT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		layout.addView(adView, params);
+		layout.setPadding(0, 1, 0, 0);
+	    setContentView(layout);
 	}
 	
-	@Override
-	protected void onStart()
-	{
-	super.onStart();
-	_gameHelper.onStart(this);
+	public void setupAds() {
+		adView = new AdView(this);
+		adView.setVisibility(View.INVISIBLE);
+		adView.setBackgroundColor(0xff000000);
+		adView.setAdUnitId(AD_UNIT_ID_BANNER);
+		adView.setAdSize(AdSize.SMART_BANNER);
 	}
 
 	@Override
-	protected void onStop()
-	{
-	super.onStop();
-	_gameHelper.onStop();
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
-	{
-	super.onActivityResult(requestCode, resultCode, data);
-	_gameHelper.onActivityResult(requestCode, resultCode, data);
-	}
-
-	@Override
-	public void signIn() {
-		try {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					_gameHelper.beginUserInitiatedSignIn();
-				}
-			});
-		} catch (Exception e) {
-			Gdx.app.log("AndroidLauncher", "Login failed: " + e.getMessage());
-		}
+	public void showBannerAd() {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				adView.setVisibility(View.VISIBLE);
+				AdRequest.Builder builder = new AdRequest.Builder();
+				builder.addTestDevice("AB3F394AF7CBCDF23DFB28D8536A5896");
+				AdRequest ad = builder.build();
+				adView.loadAd(ad);
+			}
+		});
 		
 	}
 
 	@Override
-	public void signOut() {
-		try {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					_gameHelper.signOut();
-				}
-			});
-		} catch (Exception e) {
-			Gdx.app.log("AndroidLauncher", "Logout failed :" + e.getMessage());
-		}
+	public void hideBannerAd() {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				adView.setVisibility(View.INVISIBLE);
+			}
+		});
 		
 	}
 
 	@Override
-	public void rateGame() {
+	public boolean isWifiConnected() {
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo ni = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		
-	}
-
-	@Override
-	public void submitScore(int score) {
-		if(isSignedIn() == true) {
-//			Games.Leaderboards.submitScore(_gameHelper.getApiClient(), getString(R.string.leaderboard_id), score);
-//			startActivityForResult(Games.Leaderboards.getLeaderboardIntent(_gameHelper.getApiClient(), getString(R.string.leaderboard_id)), REQUEST_CODE_UNUSED);
-		} else {
-			
-		}
+		return (ni != null && ni.isConnected());
 		
-	}
-
-	@Override
-	public void showScores() {
-		if(isSignedIn() == true) {
-//			startActivityForResult(Games.Leaderboards.getLeaderboardIntent(_gameHelper.getApiClient(), getString(R.string.leaderboard_id)), REQUEST_CODE_UNUSED);
-		} else {
-			
-		}
-		
-	}
-
-	@Override
-	public boolean isSignedIn() {
-		return _gameHelper.isSignedIn();
 	}
 }

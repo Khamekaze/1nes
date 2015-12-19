@@ -1,8 +1,10 @@
 package com.almoatarknad;
 
-import com.almoatarknad.googleplay.IGoogleServices;
-import com.almoatarknad.screen.GameScreen;
+import com.almoatarknad.ads.AdsController;
+import com.almoatarknad.ads.DummyAdsController;
+import com.almoatarknad.ads.IActivityRequestHandler;
 import com.almoatarknad.screen.ScreenManager;
+import com.almoatarknad.screen.SplashScreen;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -10,17 +12,20 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class MainGame extends ApplicationAdapter {
 	
+	public static AdsController adsController;
+	
 	public static int WIDTH = 420, HEIGHT = 700;
 	SpriteBatch batch;
 	
-	public static IGoogleServices googleServices;
-	
-	public MainGame(IGoogleServices googleServices) {
-		super();
-		MainGame.googleServices = googleServices;
+	public MainGame(AdsController adsController) {
+		if(adsController != null) {
+			this.adsController = adsController;
+		} else {
+			this.adsController = new DummyAdsController();
+		}
+		
 	}
 	
-	//NOT GOOGLE PLAY
 	public MainGame() {
 		
 	}
@@ -28,7 +33,8 @@ public class MainGame extends ApplicationAdapter {
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-		ScreenManager.setScreen(new GameScreen());
+		ScreenManager.setScreen(new SplashScreen());
+//		ScreenManager.setScreen(new GameScreen());
 	}
 	
 	@Override

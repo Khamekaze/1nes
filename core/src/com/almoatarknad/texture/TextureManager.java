@@ -20,5 +20,7 @@ public class TextureManager {
 	public static Texture b2048 = new Texture(Gdx.files.internal("block/2048.png"));
 	public static Texture b4096 = new Texture(Gdx.files.internal("block/4096.png"));
 	public static Texture b8192 = new Texture(Gdx.files.internal("block/8192.png"));
+	
+	public static Sprite logga = new Sprite(new Texture("logga_med-ring-runt-final.png"));
 
 }

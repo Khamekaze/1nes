@@ -2,18 +2,29 @@ package com.almoatarknad.screen;
 
 import com.almoatarknad.MainGame;
 import com.almoatarknad.state.GameState;
+import com.almoatarknad.state.TitleState;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class GameScreen extends Screen {
 	
 	private GameState game;
+	private TitleState title;
+	
+	public GameScreen(TitleState title) {
+		this.title = title;
+	}
+	
+	public GameScreen(TitleState title, GameState game) {
+		this.game = game;
+		this.title = title;
+	}
 
 	@Override
 	public void create() {
-		game = new GameState();
-		camera.position.set(0, 0, 0);
+		camera.position.set(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 0);
 		Gdx.input.setInputProcessor(inputManager);
+		inputManager.update();
 		camera.update();
 	}
 
@@ -36,18 +47,19 @@ public class GameScreen extends Screen {
 	@Override
 	public void resize(int width, int height) {
 		viewPort.update(width, height);
-		camera.translate(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 0);
+		camera.translate(0, 0);
 		
 	}
 
 	@Override
 	public void dispose() {
-
+		game.saveState();
+		game = null;
 	}
 
 	@Override
 	public void pause() {
-		game.getPrefs().flush();
+		game.saveState();
 	}
 
 	@Override

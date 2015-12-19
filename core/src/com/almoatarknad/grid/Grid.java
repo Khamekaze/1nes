@@ -4,8 +4,10 @@ import java.util.Random;
 
 import com.almoatarknad.MainGame;
 import com.almoatarknad.block.Block;
+import com.almoatarknad.input.PauseButton;
 import com.almoatarknad.screen.ScreenManager;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
@@ -34,7 +36,7 @@ public class Grid {
 	private Block selectedBlock;
 	private Random random;
 	private Sprite selectIndicator;
-	private boolean excecuteMove = false, merge = false, generated = false, moved = false, newRound = true, endRound = false;
+	private boolean excecuteMove = false, merge = false, generated = false, moved = false, newRound = true, endRound = false, paused = false;
 	private Array<GridBlock> freeGridBlocks;
 	private boolean animatedMerge = false, animationRun = false, mergeAnimation = false;
 	private float animatedMergeTimer = 10.0f;
@@ -42,22 +44,23 @@ public class Grid {
 	
 	private float prevSelectedX = 0, prevSelectedY = 0;
 	
-	private Sprite logga = new Sprite(new Texture(Gdx.files.internal("Logga.png")));
-	private Sprite bg = new Sprite(new Texture(Gdx.files.internal("backgound1.png")));
+	private Sprite logga = new Sprite(new Texture(Gdx.files.internal("title/logga.png")));
+	private Sprite bg = new Sprite(new Texture(Gdx.files.internal("backgrounds/mountains.png")));
 	
 	private Animation gridAnimUp, gridAnimLeft, gridAnimRight, gridAnimDown, currentAnim;
 	private TextureRegion[] upFrames, toLeftFrames, toRightFrames, downFrames;
 	private TextureRegion currentFrame;
 	
 	ShapeRenderer renderer = new ShapeRenderer();
-	float loggaX = MainGame.WIDTH / 2 - 115;
+	float loggaX = MainGame.WIDTH / 2 - 98;
 	float loggaY = MainGame.HEIGHT - 200;
 	
 	private Sound bell;
 	private Sound swish;
 	private Rectangle restartButton;
+	private PauseButton pauseButton;
 	
-	public Grid(float x, float y, int width, int height) {
+	public Grid(float x, float y, int width, int height, Preferences prefs) {
 		this.x = x;
 		this.y = y;
 		this.width = width;
@@ -67,15 +70,21 @@ public class Grid {
 		
 		float startX = (float)random.nextInt(4);
 		float startY = (float)random.nextInt(4);
+		blocks = new Array<Block>();
 		
-		startBlock = new Block(startX * 96 + 15, startY * 96 + 15, 96, 96, 1);
+		initSavedState(prefs);
+		
+		if(blocks.size == 0) {
+			startBlock = new Block(startX * 96 + 15, startY * 96 + 15, 96, 96, 1);
+			blocks.add(startBlock);
+		}
 		
 		gridSprite = new Sprite(new Texture(Gdx.files.internal("grid/Gridonlycolor.png")));
 		gridSprite.setPosition(x, y);
 		gridSprite.setSize(width, height);
 		
-		blocks = new Array<Block>();
-		blocks.add(startBlock);
+		
+		
 		selectedBlock = null;
 		startBlock = null;
 		
@@ -92,8 +101,9 @@ public class Grid {
 		
 		selectIndicator = new Sprite(new Texture(Gdx.files.internal("grid/selectindicator.png")));
 		
-		logga.setSize(240, 196);
-		logga.setPosition(loggaX, loggaY);
+		logga.setSize(196, 160);
+		logga.setPosition(MainGame.WIDTH / 2 - (196 / 2), y + 250);
+		logga.getTexture().setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		
 		restartButton = new Rectangle(logga.getX(), logga.getY(), logga.getWidth(), logga.getHeight());
 		
@@ -102,42 +112,50 @@ public class Grid {
 		
 		bell = Gdx.audio.newSound(Gdx.files.internal("bell.ogg"));
 		swish = Gdx.audio.newSound(Gdx.files.internal("swish.ogg"));
+		
+		pauseButton = new PauseButton(MainGame.WIDTH / 2 - 50, y + 390);
+		score = prefs.getInteger("score");
 	}
 	
 	public void update() {
 		if(!gameOver) {
-			newRound();
-			setSelectedBlock();
-			if(!endRound && !newRound) {
-				checkBounds();
-
-				moveBlock();
-				if(moved) {
-					updateFreeBlocks();
-				}
-				checkIfOccupied();
-				logga.setPosition(loggaX, loggaY);
-				for(Block b : blocks) {
-					b.update();
-					if(!b.isMovable()) {
-						animatedMerge = true;
-						animationRun = true;
-						elapsedTime = 0;
-					}
-
-					if(animatedMerge) {
-						b.animate(direction);
-					} else if(!animatedMerge && !animationRun) {
-						direction = -1;
-
-					}
-				}
-
+			if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(pauseButton.getHitbox())) {
+				if(!paused)
+					paused = true;
 			}
+			if(!paused) {
+				newRound();
+				setSelectedBlock();
+				if(!endRound && !newRound) {
+					checkBounds();
 
-			endRound();
+					moveBlock();
+					if(moved) {
+						updateFreeBlocks();
+					}
+					checkIfOccupied();
+					logga.setPosition(loggaX, loggaY);
+					for(Block b : blocks) {
+						b.update();
+						if(!b.isMovable()) {
+							animatedMerge = true;
+							animationRun = true;
+							elapsedTime = 0;
+						}
+
+						if(animatedMerge) {
+							b.animate(direction);
+						} else if(!animatedMerge && !animationRun) {
+							direction = -1;
+
+						}
+					}
+
+				}
+
+				endRound();
+			}
 		}
-//		restart();
 		
 	}
 	
@@ -168,8 +186,6 @@ public class Grid {
 			}
 		}
 		
-		sb.draw(currentFrame, x, y, width, height);
-		
 		for(GridBlock g : gridBlocks) {
 			g.render(sb);
 		}
@@ -177,6 +193,10 @@ public class Grid {
 		for(Block b : blocks) {
 			b.render(sb);
 		}
+		
+		sb.draw(currentFrame, x, y, width, height);
+		
+		pauseButton.render(sb);
 		
 	}
 	
@@ -186,62 +206,34 @@ public class Grid {
 		toRightFrames = new TextureRegion[22];
 		downFrames = new TextureRegion[22];
 		for(int i = 0; i < 22; i++) {
-			if(i < 10) {
-				Texture texture = new Texture(Gdx.files.internal("grid/animation/up/Gridonlyfrombuttom00" + i + ".png" ));
+				Texture texture = new Texture(Gdx.files.internal("grid/animation/up/Newgridfrombottom" + i + ".png" ));
 				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 				TextureRegion sprite = new TextureRegion(texture);
 				upFrames[i] = sprite;
-			} else {
-				Texture texture = new Texture(Gdx.files.internal("grid/animation/up/Gridonlyfrombuttom0" + i + ".png" ));
-				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-				TextureRegion sprite = new TextureRegion(texture);
-				upFrames[i] = sprite;
-			}
 		}
 		
 		for(int i = 0; i < 22; i++) {
-			if(i < 10) {
-				Texture texture = new Texture(Gdx.files.internal("grid/animation/left/Gridonlyfromright00" + i + ".png" ));
-				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-				TextureRegion sprite = new TextureRegion(texture);
-				toLeftFrames[i] = sprite;
-			} else {
-				Texture texture = new Texture(Gdx.files.internal("grid/animation/left/Gridonlyfromright0" + i + ".png" ));
-				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-				TextureRegion sprite = new TextureRegion(texture);
-				toLeftFrames[i] = sprite;
-			}
-		}
-		
-		for(int i = 0; i < 22; i++) {
-			if(i < 10) {
-				Texture texture = new Texture(Gdx.files.internal("grid/animation/right/Gridonlyfromleft00" + i + ".png" ));
+				Texture texture = new Texture(Gdx.files.internal("grid/animation/left/Newgridfromright" + i + ".png" ));
 				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 				TextureRegion sprite = new TextureRegion(texture);
 				toRightFrames[i] = sprite;
-			} else {
-				Texture texture = new Texture(Gdx.files.internal("grid/animation/right/Gridonlyfromleft0" + i + ".png" ));
-				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-				TextureRegion sprite = new TextureRegion(texture);
-				toRightFrames[i] = sprite;
-			}
 		}
 		
 		for(int i = 0; i < 22; i++) {
-			if(i < 10) {
-				Texture texture = new Texture(Gdx.files.internal("grid/animation/down/Gridonlyfromtop00" + i + ".png" ));
+				Texture texture = new Texture(Gdx.files.internal("grid/animation/right/NewgridFromleft" + i + ".png" ));
 				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 				TextureRegion sprite = new TextureRegion(texture);
-				downFrames[i] = sprite;
-			} else {
-				Texture texture = new Texture(Gdx.files.internal("grid/animation/down/Gridonlyfromtop0" + i + ".png" ));
-				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-				TextureRegion sprite = new TextureRegion(texture);
-				downFrames[i] = sprite;
-			}
+				toLeftFrames[i] = sprite;
 		}
 		
-		currentFrame = new TextureRegion(new Texture(Gdx.files.internal("grid/animation/up/Gridonlyfrombuttom000.png")));
+		for(int i = 0; i < 22; i++) {
+				Texture texture = new Texture(Gdx.files.internal("grid/animation/down/Newgridfromtrop" + i + ".png" ));
+				texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+				TextureRegion sprite = new TextureRegion(texture);
+				downFrames[i] = sprite;
+		}
+		
+		currentFrame = new TextureRegion(new Texture(Gdx.files.internal("grid/animation/up/Newgridfrombottom0.png")));
 	}
 	
 	public void loadGrid() {
@@ -555,15 +547,15 @@ public class Grid {
 		}
 	}
 		
-		public void updateFreeBlocks() {
-			freeGridBlocks.clear();
-			for(GridBlock g : gridBlocks) {
-				if(!g.isOccupied()) {
-					freeGridBlocks.add(g);
-				}
+	public void updateFreeBlocks() {
+		freeGridBlocks.clear();
+		for(GridBlock g : gridBlocks) {
+			if(!g.isOccupied()) {
+				freeGridBlocks.add(g);
 			}
-			createBlock();
 		}
+		createBlock();
+	}
 	
 	public void endRound() {
 		if(endRound) {
@@ -587,6 +579,7 @@ public class Grid {
 			}
 			newRound = true;
 			endRound = false;
+			cleanBlockArray();
 		}
 	}
 	
@@ -616,6 +609,8 @@ public class Grid {
 					freeGridBlocks.add(g);
 				}
 			}
+			
+			
 		}
 		newRound = false;
 	}
@@ -625,24 +620,55 @@ public class Grid {
 	}
 	
 	public void restart() {
-//		if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(restartButton) && hasRestarted) {
+		if(hasRestarted) {
 			float startX = (float)random.nextInt(4);
 			float startY = (float)random.nextInt(4);
 			gameOver = false;
 			startBlock = new Block(startX * 96 + 15, startY * 96 + 15, 96, 96, 1);
-			gridBlocks.clear();
+			
 			currentMaxTileValue = 0;
 			score = 0;
 			freeGridBlocks.clear();
-			blocks = null;
-			blocks = new Array<Block>();
+			blocks.clear();
 			blocks.add(startBlock);
-			startBlock = null;
+			gridBlocks.clear();
 			loadGrid();
+			startBlock = null;
 			endRound = false;
 			newRound = true;
 			hasRestarted = false;
-//		}
+		}
+	}
+	
+	public void cleanBlockArray() {
+		Array<Block> temp = new Array<Block>();
+		for(Block b : blocks) {
+			if(b.isActive()) {
+				temp.add(b);
+			}
+		}
+		blocks.clear();
+		for(Block b : temp) {
+			blocks.add(b);
+		}
+	}
+	
+	public void initSavedState(Preferences prefs) {
+		Block b;
+		for(int i = 0; i < 32; i++) {
+			if(prefs.getFloat("x" + i) != 0) {
+				float x = prefs.getFloat("x" + i);
+				float y = prefs.getFloat("y" + i);
+				int val = (int) prefs.getFloat("val" + i);
+				b = new Block(x, y, 96, 96, val);
+				blocks.add(b);
+				b = null;
+			}
+		}
+	}
+	
+	public Array<Block> getBlocks() {
+		return blocks;
 	}
 	
 	public boolean isGameOver() {
@@ -655,5 +681,13 @@ public class Grid {
 	
 	public void setGameOver(boolean gameOver) {
 		this.gameOver = gameOver;
+	}
+	
+	public boolean isPaused() {
+		return paused;
+	}
+	
+	public void setPaused(boolean paused) {
+		this.paused = paused;
 	}
 }

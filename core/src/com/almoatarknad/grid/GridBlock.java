@@ -50,8 +50,8 @@ public class GridBlock {
 		if(available) {
 			currentFrame = indicator.getKeyFrame(elapsedTime);
 			Sprite temp = new Sprite(currentFrame.getTexture());
-			temp.setSize(40, 40);
-			temp.setPosition(x + 32, y + 32);
+			temp.setSize(84, 84);
+			temp.setPosition(x + 10, y + 8);
 			temp.setAlpha(0.5f);
 			sprite = temp;
 			sprite.draw(sb);
@@ -60,7 +60,7 @@ public class GridBlock {
 	
 	public void loadAnimation() {
 		for(int i = 0; i < 10; i++) {
-			Texture texture = new Texture(Gdx.files.internal("block/animation/where2movebutton00" + i + ".png" ));
+			Texture texture = new Texture(Gdx.files.internal("block/animation/loading_box_sequence" + i + ".png" ));
 			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 			TextureRegion sprite = new TextureRegion(texture);
 			indicatorFrames[i] = sprite;
