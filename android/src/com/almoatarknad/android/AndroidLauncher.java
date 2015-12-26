@@ -16,6 +16,8 @@ import android.os.Bundle;
 import android.provider.Settings.Secure;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 
@@ -23,15 +25,10 @@ import android.widget.RelativeLayout;
 public class AndroidLauncher extends AndroidApplication implements AdsController {
 	private final int SHOW_ADS = 1;
 	private final int HIDE_ADS = 0;
-	private static final String AD_UNIT_ID_BANNER = "ca-app-pub-4335249035736245/697384081";
-	private static final String GOOGLE_PLAY_URL = "https://play.google.com/store/apps/developer?id=TheInvader360";
-	private static final String GITHUB_URL = "https://github.com/TheInvader360";
-	private static final String BLOG_URL = "http://theinvader360.blogspot.co.uk/";
-	public static AdView adView;
+	private static final String AD_UNIT_ID_BANNER = "ca-app-pub-4335249035736245/6973840813";
+	protected AdView adView;
 	protected View gameView;
-	private InterstitialAd interstitialAd;
 	AdRequest.Builder adRequestBuilder;
-	private String android_id;
 	
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
@@ -40,10 +37,10 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 		config.useAccelerometer = false;
 		config.useCompass = false;
 		config.useGLSurfaceView20API18 = true;
-		android_id = Secure.getString(getContext().getContentResolver(),
-	            Secure.ANDROID_ID);
 		
-		System.out.println("ANDROID ID: " + android_id);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 		
 		RelativeLayout layout = new RelativeLayout(this);
 		
@@ -58,7 +55,7 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 				ViewGroup.LayoutParams.WRAP_CONTENT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		layout.addView(adView, params);
-		layout.setPadding(0, 1, 0, 0);
+		layout.setPadding(0, 0, 0, 0);
 	    setContentView(layout);
 	}
 	
@@ -75,14 +72,36 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				adView.setVisibility(View.VISIBLE);
-				AdRequest.Builder builder = new AdRequest.Builder();
-				builder.addTestDevice("AB3F394AF7CBCDF23DFB28D8536A5896");
-				AdRequest ad = builder.build();
+				//Plattan
+//				builder.addTestDevice("AB3F394AF7CBCDF23DFB28D8536A5896");
+				
+				//Mobilen
+//				builder.addTestDevice("C24EE5AFF55DC9227921D27018F6FED9");
+//				AdRequest ad = new AdRequest.Builder().addTestDevice("C24EE5AFF55DC9227921D27018F6FED9").build();
+				AdRequest ad = new AdRequest.Builder().build();
 				adView.loadAd(ad);
+				adView.setVisibility(View.VISIBLE);
+				System.out.println("SHOW AD");
 			}
 		});
-		
+	}
+	
+	@Override
+	public void loadBannerAd() {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				//Plattan
+//				builder.addTestDevice("AB3F394AF7CBCDF23DFB28D8536A5896");
+				
+				//Mobilen
+//				builder.addTestDevice("C24EE5AFF55DC9227921D27018F6FED9");
+//				AdRequest ad = new AdRequest.Builder().addTestDevice("C24EE5AFF55DC9227921D27018F6FED9").build();
+				AdRequest ad = new AdRequest.Builder().build();
+				adView.loadAd(ad);
+				System.out.println("LOAD AD");
+			}
+		});
 	}
 
 	@Override
@@ -91,17 +110,39 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 			@Override
 			public void run() {
 				adView.setVisibility(View.INVISIBLE);
+				System.out.println("HIDE AD");
 			}
 		});
-		
 	}
 
 	@Override
 	public boolean isWifiConnected() {
 		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo ni = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-		
+		NetworkInfo ni = cm.getActiveNetworkInfo();
 		return (ni != null && ni.isConnected());
-		
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if(adView != null) {
+			adView.resume();
+		}
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		if(adView != null) {
+			adView.pause();
+		}
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if(adView != null) {
+			adView.destroy();
+		}
 	}
 }

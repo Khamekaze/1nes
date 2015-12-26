@@ -1,8 +1,6 @@
 package com.almoatarknad.desktop;
 
-import com.almoatarknad.ActionResolver;
 import com.almoatarknad.MainGame;
-import com.almoatarknad.ads.IActivityRequestHandler;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 

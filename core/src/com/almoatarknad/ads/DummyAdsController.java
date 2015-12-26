@@ -20,4 +20,10 @@ public class DummyAdsController implements AdsController {
 		return true;
 	}
 
+	@Override
+	public void loadBannerAd() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -19,6 +19,11 @@ public class GameScreen extends Screen {
 		this.game = game;
 		this.title = title;
 	}
+	
+	public GameScreen() {
+//		title = new TitleState();
+//		game = new GameState(title);
+	}
 
 	@Override
 	public void create() {
@@ -53,13 +58,14 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void dispose() {
+		System.out.println("DISPOSING");
 		game.saveState();
-		game = null;
+//		game = null;
 	}
 
 	@Override
 	public void pause() {
-		game.saveState();
+//		game.saveState();
 	}
 
 	@Override

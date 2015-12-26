@@ -2,7 +2,10 @@ package com.almoatarknad.texture;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class TextureManager {
 	
@@ -22,5 +25,18 @@ public class TextureManager {
 	public static Texture b8192 = new Texture(Gdx.files.internal("block/8192.png"));
 	
 	public static Sprite logga = new Sprite(new Texture("logga_med-ring-runt-final.png"));
+	
+	public static Animation availableBlock = new Animation(0.05f, new TextureRegion[] {
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence0.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence1.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence2.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence3.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence4.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence5.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence6.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence7.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence8.png" ))),
+			new TextureRegion(new Texture(Gdx.files.internal("block/animation/loading_box_sequence9.png" ))),
+	});
 
 }

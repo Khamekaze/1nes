@@ -6,6 +6,7 @@ import com.almoatarknad.MainGame;
 import com.almoatarknad.block.Block;
 import com.almoatarknad.input.PauseButton;
 import com.almoatarknad.screen.ScreenManager;
+import com.almoatarknad.texture.TextureManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Sound;
@@ -35,29 +36,27 @@ public class Grid {
 	private Block startBlock;
 	private Block selectedBlock;
 	private Random random;
-	private Sprite selectIndicator;
-	private boolean excecuteMove = false, merge = false, generated = false, moved = false, newRound = true, endRound = false, paused = false;
+	private boolean moved = false, newRound = true, endRound = false, paused = false;
 	private Array<GridBlock> freeGridBlocks;
 	private boolean animatedMerge = false, animationRun = false, mergeAnimation = false;
-	private float animatedMergeTimer = 10.0f;
 	private float elapsedTime = 0.0f;
+	private int stageOfLoop = 0;
+	private boolean checkBoundsBool = false;
 	
-	private float prevSelectedX = 0, prevSelectedY = 0;
+	private Sprite logga;
+	private Sprite bg;
+	private Sprite gridBG;
 	
-	private Sprite logga = new Sprite(new Texture(Gdx.files.internal("title/logga.png")));
-	private Sprite bg = new Sprite(new Texture(Gdx.files.internal("backgrounds/mountains.png")));
-	
-	private Animation gridAnimUp, gridAnimLeft, gridAnimRight, gridAnimDown, currentAnim;
+	private Animation gridAnimUp, gridAnimLeft, gridAnimRight, gridAnimDown;
 	private TextureRegion[] upFrames, toLeftFrames, toRightFrames, downFrames;
 	private TextureRegion currentFrame;
 	
-	ShapeRenderer renderer = new ShapeRenderer();
-	float loggaX = MainGame.WIDTH / 2 - 98;
+	float loggaX = MainGame.WIDTH / 2 - 80;
 	float loggaY = MainGame.HEIGHT - 200;
 	
 	private Sound bell;
 	private Sound swish;
-	private Rectangle restartButton;
+//	private Rectangle restartButton;
 	private PauseButton pauseButton;
 	
 	public Grid(float x, float y, int width, int height, Preferences prefs) {
@@ -65,7 +64,6 @@ public class Grid {
 		this.y = y;
 		this.width = width;
 		this.height = height;
-		
 		random = new Random();
 		
 		float startX = (float)random.nextInt(4);
@@ -79,11 +77,10 @@ public class Grid {
 			blocks.add(startBlock);
 		}
 		
-		gridSprite = new Sprite(new Texture(Gdx.files.internal("grid/Gridonlycolor.png")));
-		gridSprite.setPosition(x, y);
-		gridSprite.setSize(width, height);
+		bg = new Sprite(new Texture(Gdx.files.internal("backgrounds/mountains.png")));
+		gridBG = new Sprite(new Texture(Gdx.files.internal("gui/bgfade.png")));
 		
-		
+		logga = new Sprite(new Texture(Gdx.files.internal("logga_med-ring-runt-final.png")));
 		
 		selectedBlock = null;
 		startBlock = null;
@@ -97,18 +94,25 @@ public class Grid {
 		gridAnimUp = new Animation(1f/40f, upFrames);
 		gridAnimLeft = new Animation(1f/40f, toLeftFrames);
 		gridAnimRight = new Animation(1f/40f, toRightFrames);
-		currentAnim = null;
 		
-		selectIndicator = new Sprite(new Texture(Gdx.files.internal("grid/selectindicator.png")));
+		gridSprite = new Sprite(gridAnimUp.getKeyFrame(0));
+		gridSprite.setPosition(x, y);
+		gridSprite.setSize(width, height);
 		
-		logga.setSize(196, 160);
-		logga.setPosition(MainGame.WIDTH / 2 - (196 / 2), y + 250);
+//		selectIndicator = new Sprite(new Texture(Gdx.files.internal("grid/selectindicator.png")));
+		
+		logga.setSize(160, 160);
+		logga.setPosition(loggaX, loggaY);
 		logga.getTexture().setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		
-		restartButton = new Rectangle(logga.getX(), logga.getY(), logga.getWidth(), logga.getHeight());
+//		restartButton = new Rectangle(logga.getX(), logga.getY(), logga.getWidth(), logga.getHeight());
 		
 		bg.setSize(MainGame.WIDTH, MainGame.HEIGHT);
 		bg.setPosition(0, 0);
+		
+		gridBG.setSize(width - 10, height - 10);
+		gridBG.setPosition(x + 5, y + 5);
+		gridBG.setAlpha(0.6f);
 		
 		bell = Gdx.audio.newSound(Gdx.files.internal("bell.ogg"));
 		swish = Gdx.audio.newSound(Gdx.files.internal("swish.ogg"));
@@ -124,38 +128,72 @@ public class Grid {
 					paused = true;
 			}
 			if(!paused) {
-				newRound();
-				setSelectedBlock();
-				if(!endRound && !newRound) {
-					checkBounds();
-
-					moveBlock();
-					if(moved) {
+				if(stageOfLoop == 0) {
+//					System.out.println(stageOfLoop);
+					newRound();
+				}
+					
+				if(stageOfLoop == 1) {
+//					System.out.println(stageOfLoop);
+					setSelectedBlock();
+				}
+					
+//				if(!endRound && !newRound) {
+					if(stageOfLoop == 1 && checkBoundsBool) {
+//						System.out.println(stageOfLoop);
+						checkBounds();
+					}
+						
+					
+					if(stageOfLoop == 3) {
+//						System.out.println(stageOfLoop);
+						moveBlock();
+					}
+						
+					if(stageOfLoop == 4) {
+//						System.out.println(stageOfLoop);
 						updateFreeBlocks();
 					}
-					checkIfOccupied();
-					logga.setPosition(loggaX, loggaY);
-					for(Block b : blocks) {
-						b.update();
-						if(!b.isMovable()) {
-							animatedMerge = true;
-							animationRun = true;
-							elapsedTime = 0;
-						}
-
-						if(animatedMerge) {
-							b.animate(direction);
-						} else if(!animatedMerge && !animationRun) {
-							direction = -1;
-
-						}
+					
+					if(stageOfLoop == 5) {
+						createBlock();
 					}
+					if(stageOfLoop == 6) {
+//						System.out.println(stageOfLoop);
+						checkIfOccupied();
+					}
+						
+//					logga.setPosition(MainGame.WIDTH / 2 - 80, loggaY);
+					if(stageOfLoop == 7) {
+						for(Block b : blocks) {
+							b.update();
+							if(!b.isMovable()) {
+								animatedMerge = true;
+								animationRun = true;
+								elapsedTime = 0;
+							}
 
+							if(animatedMerge) {
+								b.animate(direction);
+//								stageOfLoop = 7;
+							} else if(!animatedMerge && !animationRun) {
+								direction = -1;
+//								stageOfLoop = 7;
+							}
+						}
+//						System.out.println(stageOfLoop);
+						stageOfLoop = 8;
+					}
 				}
-
-				endRound();
+				
+				if(stageOfLoop == 8) {
+//					System.out.println(stageOfLoop);
+					checkBounds();
+					endRound();
+				}
+				
 			}
-		}
+//		}
 		
 	}
 	
@@ -163,7 +201,7 @@ public class Grid {
 		bg.draw(sb);
 		elapsedTime += Gdx.graphics.getDeltaTime();
 		logga.draw(sb);
-		
+		gridBG.draw(sb);
 		if(!mergeAnimation) {
 			if(mergeDirection == 0) {
 				currentFrame = gridAnimUp.getKeyFrame(elapsedTime);
@@ -191,8 +229,40 @@ public class Grid {
 		}
 		
 		for(Block b : blocks) {
-			b.render(sb);
-		}
+			if(b.getValue() == 1) {
+				sb.draw(TextureManager.b1, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 2) {
+				sb.draw(TextureManager.b2, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 4) {
+				sb.draw(TextureManager.b4, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 8) {
+				sb.draw(TextureManager.b8, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 16) {
+				sb.draw(TextureManager.b16, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 32) {
+				sb.draw(TextureManager.b32, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 64) {
+				sb.draw(TextureManager.b64, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 128) {
+				sb.draw(TextureManager.b128, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 256) {
+				sb.draw(TextureManager.b256, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 512) {
+				sb.draw(TextureManager.b512, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 1024) {
+				sb.draw(TextureManager.b1024, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 2048) {
+				sb.draw(TextureManager.b2048, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 4096) {
+				sb.draw(TextureManager.b4096, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			} else if(b.getValue() == 8192) {
+				sb.draw(TextureManager.b8192, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
+			}
+			
+			if(b.isSelected()) {
+				b.render(sb);
+			}
+		} 
 		
 		sb.draw(currentFrame, x, y, width, height);
 		
@@ -247,17 +317,13 @@ public class Grid {
 		
 		for(GridBlock g : gridBlocks) {
 			for(Block b : blocks) {
-				if(b.getX() > g.getX() - 2 && b.getY() > g.getY() - 2 && b.getX() < g.getX() + 2 && b.getY() < g.getY() + 2
+				if(b.getX() == g.getX() && b.getY() == g.getY()
 						&& b.isActive() && !g.isOccupied()) {
 					g.setIsOccupied(true);
 					g.setValue(b.getValue());
+				} else {
+					freeGridBlocks.add(g);
 				}
-			}
-		}
-		
-		for(GridBlock g : gridBlocks) {
-			if(!g.isOccupied()) {
-				freeGridBlocks.add(g);
 			}
 		}
 	}
@@ -274,18 +340,21 @@ public class Grid {
 
 			for(GridBlock g : gridBlocks) {
 				for(Block b : blocks) {
-//					if(b.isMovable()) {
+					if(b.isMovable()) {
 						if(Gdx.input.justTouched() && b.isActive() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(b.getHitbox())) {
 							if(selectedAmount == 1 && selectedBlock != null && selectedBlock.equals(b) && !selectedNew) {
 								b.setSelected(false);
 								endRound = true;
 								newRound = false;
+								stageOfLoop = 7;
+								checkBoundsBool = false;
 							}
 
 							if(selectedAmount == 0) {
 								b.setSelected(true);
 								selectedBlock = b;
 								selectedBlock.setSelected(true);
+								checkBoundsBool = true;
 							}
 
 						} else if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(g.getHitBox()) && !g.isOccupied() && g.isAvailable()) {
@@ -293,16 +362,21 @@ public class Grid {
 								if(g.getX() > b.getX() && g.getY() == b.getY()) {
 									direction = b.right;
 									b.setMovable(false);
+									stageOfLoop = 3;
 								} else if(g.getX() < b.getX() && g.getY() == b.getY()) {
 									direction = b.left;
 									b.setMovable(false);
+									stageOfLoop = 3;
 								} else if(g.getY() > b.getY() && g.getX() == b.getX()) {
 									direction = b.up;
 									b.setMovable(false);
+									stageOfLoop = 3;
 								} else if(g.getY() < b.getY() && g.getX() == b.getX()) {
 									direction = b.down;
 									b.setMovable(false);
+									stageOfLoop = 3;
 								}
+								
 							}
 						}
 						
@@ -310,11 +384,11 @@ public class Grid {
 						if(selectedAmount == 1 && selectedBlock != null && g.getValue() == selectedBlock.getValue()) {
 							if(b.getX() == g.getX() && b.getY() == g.getY()) {
 								merge(b, selectedBlock);
-								endRound = true;
-								newRound = false;
+								stageOfLoop = 3;
 							}
 						}
 					}
+				}
 				}
 			}
 		}
@@ -326,13 +400,13 @@ public class Grid {
 				move(direction, b);
 				mergeDirection = direction;
 				mergeAnimation = false;
-				endRound = true;
-				newRound = false;
 			}
 		}
+		stageOfLoop = 4;
 	}
 	
 	public void createBlock() {
+		if(moved) {
 		Block block = null;
 		float randomX = 0;
 		float randomY = 0;
@@ -397,9 +471,9 @@ public class Grid {
 
 		block = null;
 		direction = -1;
-		endRound = true;
-		newRound = false;
 		moved = false;
+		}
+		stageOfLoop = 6;
 	}
 	
 	public void merge(Block a, Block b) {
@@ -431,20 +505,6 @@ public class Grid {
 			a = null;
 			b = null;
 			bell.play();
-		}
-	}
-	
-	public void move(int direction, Block b, GridBlock g) {
-		if(!g.isOccupied()) {
-			oldX = b.getX();
-			oldY = b.getY();
-			b.move(direction);
-			b.setSelected(false);
-			moved = true;
-			swish.play();
-		} else if(g.isOccupied()) {
-			endRound = true;
-			newRound = false;
 		}
 	}
 	
@@ -533,10 +593,12 @@ public class Grid {
 				
 			}
 		}
+		
 		if(blocksBlocked >= 48) {
 			gameOver = true;
 		}
 		blocksBlocked = 0;
+		checkBoundsBool = false;
 	}
 	
 	public void checkIfOccupied() {
@@ -548,6 +610,7 @@ public class Grid {
 				}
 			}
 		}
+		stageOfLoop = 7;
 	}
 		
 	public void updateFreeBlocks() {
@@ -557,13 +620,16 @@ public class Grid {
 				freeGridBlocks.add(g);
 			}
 		}
-		createBlock();
+		
+		stageOfLoop = 5;
 	}
 	
 	public void endRound() {
-		if(endRound) {
+//		if(endRound) {
+		
 			for(Block b : blocks) {
 					b.setSelected(false);
+					b.update();
 					if(selectedBlock != null) {
 						selectedBlock.setSelected(false);
 						selectedBlock = null;
@@ -580,32 +646,26 @@ public class Grid {
 				selectedBlock.setSelected(false);
 				selectedBlock = null;
 			}
+			cleanBlockArray();
 			newRound = true;
 			endRound = false;
-			cleanBlockArray();
-		}
+			
+//		}
+		stageOfLoop = 0;
 	}
 	
 	public void newRound() {
-		
 		if(hasRestarted == false) {
 			hasRestarted = true;
 		}
 		if(newRound && !endRound) {
 			freeGridBlocks.clear();
-//			for(GridBlock g : gridBlocks) {
-//				for(Block b : blocks) {
-//					if(b.getX() > g.getX() - 2 && b.getY() > g.getY() - 2 && b.getX() < g.getX() + 2 && b.getY() < g.getY() + 2
-//							&& b.isActive() && !g.isOccupied()) {
-//						g.setIsOccupied(true);
-//						g.setValue(b.getValue());
-//					}
-//				}
-//			}
+			
 			checkIfOccupied();
 			
 			for(Block b : blocks) {
 				b.setMovable(true);
+				b.update();
 			}
 			
 			for(GridBlock g : gridBlocks) {
@@ -614,9 +674,9 @@ public class Grid {
 				}
 			}
 			
-			
 		}
 		newRound = false;
+		stageOfLoop = 1;
 	}
 	
 	public int getScore() {
@@ -629,18 +689,25 @@ public class Grid {
 			float startY = (float)random.nextInt(4);
 			gameOver = false;
 			startBlock = new Block(startX * 96 + 15, startY * 96 + 15, 96, 96, 1);
-			
 			currentMaxTileValue = 0;
 			score = 0;
 			freeGridBlocks.clear();
 			blocks.clear();
 			blocks.add(startBlock);
-			gridBlocks.clear();
-			loadGrid();
+			for(GridBlock g : gridBlocks) {
+				if(startBlock.getX() == g.getX() && startBlock.getY() == g.getY()) {
+					g.setIsOccupied(true);
+					g.setValue(startBlock.getValue());
+				} else {
+					g.setIsOccupied(false);
+					g.setValue(0);
+				}
+			}
 			startBlock = null;
 			endRound = false;
 			newRound = true;
 			hasRestarted = false;
+			stageOfLoop = 0;
 		}
 	}
 	

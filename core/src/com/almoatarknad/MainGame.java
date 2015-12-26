@@ -2,11 +2,11 @@ package com.almoatarknad;
 
 import com.almoatarknad.ads.AdsController;
 import com.almoatarknad.ads.DummyAdsController;
-import com.almoatarknad.ads.IActivityRequestHandler;
 import com.almoatarknad.screen.ScreenManager;
 import com.almoatarknad.screen.SplashScreen;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -23,7 +23,6 @@ public class MainGame extends ApplicationAdapter {
 		} else {
 			this.adsController = new DummyAdsController();
 		}
-		
 	}
 	
 	public MainGame() {

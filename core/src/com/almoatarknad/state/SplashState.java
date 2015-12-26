@@ -58,7 +58,7 @@ public class SplashState {
 		if(delay == 0) {
 			elapsedTime += Gdx.graphics.getDeltaTime();
 			currentFrame = splashLogo.getKeyFrame(elapsedTime);
-			sb.draw(currentFrame, MainGame.WIDTH / 2 - 125, MainGame.HEIGHT / 2 - 100, 250, 220);
+			sb.draw(currentFrame, MainGame.WIDTH / 2 - 125, MainGame.HEIGHT / 2 - 100, 250, 250);
 		}
 		sb.end();
 	}

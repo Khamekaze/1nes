@@ -1,12 +1,14 @@
 package com.almoatarknad.state;
 
 import com.almoatarknad.MainGame;
+import com.almoatarknad.ads.AdsController;
 import com.almoatarknad.grid.Grid;
 import com.almoatarknad.input.MenuButton;
 import com.almoatarknad.input.RestartButton;
 import com.almoatarknad.input.UnpauseButton;
 import com.almoatarknad.screen.ScreenManager;
 import com.almoatarknad.screen.TitleScreen;
+import com.almoatarknad.texture.TextureManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
@@ -24,6 +26,8 @@ public class GameState {
 	private MenuButton menuButton;
 	private UnpauseButton unpauseButton;
 	
+	private AdsController adsController;
+	
 	private TitleState title;
 	
 	private Sprite redCounter, blueCounter, gameOverOverlay, backGroundFade;
@@ -37,14 +41,16 @@ public class GameState {
 	private BitmapFont scoreFont, highscoreFont;
 	private GlyphLayout layout = new GlyphLayout();
 	
-	private Preferences prefs = Gdx.app.getPreferences("highscore");
+	private Preferences prefs;
 	private int highScore;
 	
 	private boolean hasFlushed = false, showingAd = false;
 	
 	public GameState(TitleState title) {
 		this.title = title;
-		title.reset();
+		this.title.reset();
+		prefs = Gdx.app.getPreferences("highscore");
+		adsController = MainGame.adsController;
 		restartButton = new RestartButton(MainGame.WIDTH / 2 - 78, MainGame.HEIGHT / 2 - 100);
 		menuButton = new MenuButton(MainGame.WIDTH / 2 - 125, MainGame.HEIGHT / 2);
 		unpauseButton = new UnpauseButton(MainGame.WIDTH / 2 - 78, MainGame.HEIGHT / 2 + 100);
@@ -57,6 +63,7 @@ public class GameState {
 		backGroundFade.setPosition(0, 0);
 		backGroundFade.setSize(MainGame.WIDTH, MainGame.HEIGHT);
 		backGroundFade.setAlpha(0.6f);
+		
 		grid = new Grid(15, 15, 390, 390, prefs);
 		
 		parameter.size = 20;
@@ -88,41 +95,28 @@ public class GameState {
 			highScore = score;
 		}
 		
-		if(grid.isGameOver() && !hasFlushed) {
-			System.out.println("GAME OVER");
-			saveState();
+		if(grid.isGameOver()) {
 			hasFlushed = true;
 		} else if(!grid.isGameOver() && hasFlushed) {
 			hasFlushed = false;
 		}
 		
-		if(!grid.hasRestarted()) {
-			saveState();
-		}
-		
 		if(Gdx.input.justTouched()
 							 && ScreenManager.getCurrentScreen().inputManager.getIntersecting(restartButton.getHitbox())) {
 			if(grid.isGameOver()) {
-				saveState();
 				grid.restart();
-				System.out.println("RESTART");
 			}
 		}
 		
 		if(Gdx.input.justTouched() && grid.isPaused()) {
 			if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(menuButton.getHitbox())) {
-				saveState();
-				if(hasFlushed) {
-					grid.newRound();
-					grid.endRound();
-					grid.setPaused(false);
-					ScreenManager.setScreen(new TitleScreen(title));
-				}
+				grid.newRound();
+				grid.endRound();
+				grid.setPaused(false);
+				ScreenManager.setScreen(new TitleScreen(title));
 			} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(unpauseButton.getHitbox())) {
 				grid.setPaused(false);
-//				saveState();
 			} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(restartButton.getHitbox())) {
-//				saveState();
 				grid.restart();
 				grid.setPaused(false);
 			}
@@ -132,16 +126,15 @@ public class GameState {
 	}
 	
 	public void render(SpriteBatch sb) {
+//		if(!grid.isPaused() && !grid.isGameOver()) {
 		grid.render(sb);
-//		layout.setText(scoreFont, String.valueOf(score));
-		
-		String scoreString = String.valueOf(score);
 		redCounter.draw(sb);
 		blueCounter.draw(sb);
 		scoreCounter(sb);
-		layout.setText(highscoreFont, String.valueOf(highScore));
-		String highScoreString = String.valueOf(highScore);
+//		layout.setText(highscoreFont, String.valueOf(highScore));
 		highScoreCounter(sb);
+//		}
+		
 		if(grid.isGameOver()) {
 			backGroundFade.draw(sb);
 			gameOverOverlay.draw(sb);
@@ -261,48 +254,44 @@ public class GameState {
 	}
 	
 	public void saveState() {
+//		System.out.println("SAVING STATE");
 		hasFlushed = false;
 		int currentHighScore = prefs.getInteger("highscore");
-		System.out.println("CURRENT HIGH: " + currentHighScore);
+//		System.out.println("CURRENT HIGH: " + currentHighScore);
 		prefs.clear();
-		prefs.flush();
+//		prefs.flush();
 		for(int i = 0; i < grid.getBlocks().size; i++) {
 			prefs.putFloat("x" + i, grid.getBlocks().get(i).getX());
 			prefs.putFloat("y" + i, grid.getBlocks().get(i).getY());
 			prefs.putFloat("val" + i, grid.getBlocks().get(i).getValue());
-			System.out.println("NUM: " + i);
+//			System.out.println("NUM: " + i);
 		}
 		
 		prefs.putInteger("score", grid.getScore());
 		
 		if(currentHighScore < score) {
 			prefs.putInteger("highscore", score);
-			System.out.println("NEW HIGH SCORE");
+//			System.out.println("NEW HIGH SCORE");
 		} else {
 			prefs.putInteger("highscore", currentHighScore);
 		}
 		prefs.flush();
 		hasFlushed = true;
-		currentHighScore = prefs.getInteger("highscore");
-		System.out.println("CURRENT HIGH: " + currentHighScore);
+//		currentHighScore = prefs.getInteger("highscore");
+//		System.out.println("CURRENT HIGH: " + currentHighScore);
 	}
 	
 	public void handleAds() {
 		if(grid.isPaused() && !showingAd) {
-//			MainGame.actionResolver.showOrLoadInterstital();
-//			MainGame.handler.showAds(true);
-			if(MainGame.adsController.isWifiConnected())
-				MainGame.adsController.showBannerAd();
+			if(adsController.isWifiConnected())
+				adsController.showBannerAd();
 			showingAd = true;
 		} else if(grid.isGameOver() && !showingAd) {
-//			MainGame.actionResolver.showOrLoadInterstital();
-//			MainGame.handler.showAds(true);
-			if(MainGame.adsController.isWifiConnected())
-				MainGame.adsController.showBannerAd();
+			if(adsController.isWifiConnected())
+				adsController.showBannerAd();
 			showingAd = true;
-		} else if(!grid.isPaused() && !grid.isGameOver()) {
-//			MainGame.handler.showAds(false);
-			MainGame.adsController.hideBannerAd();
+		} else if(!grid.isPaused() && !grid.isGameOver() && showingAd) {
+			adsController.hideBannerAd();
 			showingAd = false;
 		}
 	}

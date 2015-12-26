@@ -19,15 +19,15 @@ public class TitleState {
 	private MenuButton menuButton;
 	private float cameraY = MainGame.HEIGHT / 2, cameraX = MainGame.WIDTH / 2;
 	private boolean moveToHowTo = false, moveToMenu = false, moveToLoading = false;
-	private float cameraSpeed = 30f, delay = 5f;
+	private float cameraSpeed = 30f, delay = 1f;
 	private GameState game;
 	
 	public TitleState() {
 		logga = TextureManager.logga;
-		logga.setSize(MainGame.WIDTH, MainGame.WIDTH);
-		logga.setPosition(0, MainGame.HEIGHT - logga.getHeight());
-		play = new TitleButton(MainGame.WIDTH / 2 - 175, MainGame.HEIGHT / 2 - 200, 150, 180, 0);
-		howto = new TitleButton(MainGame.WIDTH / 2 + 25, MainGame.HEIGHT / 2 - 200, 150, 180, 1);
+		logga.setSize(MainGame.WIDTH / 1.5f, MainGame.WIDTH / 1.5f);
+		logga.setPosition(MainGame.WIDTH / 2 - logga.getWidth() / 2, MainGame.HEIGHT / 2);
+		play = new TitleButton(MainGame.WIDTH / 2 - 175, MainGame.HEIGHT / 2 - 250, 150, 180, 0);
+		howto = new TitleButton(MainGame.WIDTH / 2 + 25, MainGame.HEIGHT / 2 - 250, 150, 180, 1);
 		menuButton = new MenuButton(MainGame.WIDTH / 2 - 125, 0 - MainGame.HEIGHT / 2 - 350);
 		loading = new Sprite(new Texture(Gdx.files.internal("loading.png")));
 		loading.setSize(MainGame.WIDTH, 250);
@@ -39,17 +39,24 @@ public class TitleState {
 	
 	public void update() {
 		if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(play.getHitBox())) {
-			moveToLoading = true;
-			moveToHowTo = false;
-			moveToMenu = false;
+			if(!moveToHowTo && !moveToMenu) {
+				moveToLoading = true;
+				moveToHowTo = false;
+				moveToMenu = false;
+			}
 		} else if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(howto.getHitBox())) {
-			moveToHowTo = true;
-			moveToMenu = false;
-			cameraSpeed = 30f;
+			if(!moveToLoading && !moveToMenu) {
+				moveToHowTo = true;
+				moveToMenu = false;
+				cameraSpeed = 30f;
+			}
+			
 		} else if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(menuButton.getHitbox())) {
-			cameraSpeed = 30f;
-			moveToHowTo = false;
-			moveToMenu = true;
+			if(!moveToHowTo && !moveToLoading) {
+				cameraSpeed = 30f;
+				moveToHowTo = false;
+				moveToMenu = true;
+			}
 		}
 		
 		if(moveToHowTo) {
@@ -78,7 +85,7 @@ public class TitleState {
 	
 	public void render(SpriteBatch sb) {
 		sb.begin();
-		Gdx.gl.glClearColor(0.8f, 0.9f, 0.7f, 1);
+		Gdx.gl.glClearColor(0.85f, 0.85f, 0.85f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		logga.draw(sb);
 		play.render(sb);
@@ -138,7 +145,7 @@ public class TitleState {
 		moveToMenu = false;
 		cameraX = MainGame.WIDTH / 2;
 		cameraY = MainGame.HEIGHT / 2;
-		delay = 5f;
+		delay = 1f;
 	}
 
 }
