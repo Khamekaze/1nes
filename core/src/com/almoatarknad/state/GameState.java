@@ -91,7 +91,7 @@ public class GameState {
 		if(!grid.isPaused())
 			grid.update();
 		score = grid.getScore();
-		if(score > highScore) {
+		if(score >= highScore) {
 			highScore = score;
 		}
 		
@@ -104,19 +104,27 @@ public class GameState {
 		if(Gdx.input.justTouched()
 							 && ScreenManager.getCurrentScreen().inputManager.getIntersecting(restartButton.getHitbox())) {
 			if(grid.isGameOver()) {
+				if(highScore >= prefs.getInteger("highscore")) {
+					prefs.putInteger("highscore", highScore);
+					System.out.println("SAVING HIGHSCORE");
+				}
 				grid.restart();
 			}
 		}
 		
 		if(Gdx.input.justTouched() && grid.isPaused()) {
-			if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(menuButton.getHitbox())) {
+			if(ScreenManager.getCurrentScreen().inputManager.getIntersecting(menuButton.getHitbox())) {
 				grid.newRound();
 				grid.endRound();
 				grid.setPaused(false);
 				ScreenManager.setScreen(new TitleScreen(title));
-			} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(unpauseButton.getHitbox())) {
+			} else if(ScreenManager.getCurrentScreen().inputManager.getIntersecting(unpauseButton.getHitbox())) {
 				grid.setPaused(false);
-			} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(restartButton.getHitbox())) {
+			} else if(ScreenManager.getCurrentScreen().inputManager.getIntersecting(restartButton.getHitbox())) {
+				if(highScore >= prefs.getInteger("highscore")) {
+					prefs.putInteger("highscore", highScore);
+					System.out.println("SAVING HIGHSCORE");
+				}
 				grid.restart();
 				grid.setPaused(false);
 			}
@@ -126,14 +134,11 @@ public class GameState {
 	}
 	
 	public void render(SpriteBatch sb) {
-//		if(!grid.isPaused() && !grid.isGameOver()) {
 		grid.render(sb);
 		redCounter.draw(sb);
 		blueCounter.draw(sb);
 		scoreCounter(sb);
-//		layout.setText(highscoreFont, String.valueOf(highScore));
 		highScoreCounter(sb);
-//		}
 		
 		if(grid.isGameOver()) {
 			backGroundFade.draw(sb);
@@ -254,31 +259,24 @@ public class GameState {
 	}
 	
 	public void saveState() {
-//		System.out.println("SAVING STATE");
 		hasFlushed = false;
 		int currentHighScore = prefs.getInteger("highscore");
-//		System.out.println("CURRENT HIGH: " + currentHighScore);
 		prefs.clear();
-//		prefs.flush();
 		for(int i = 0; i < grid.getBlocks().size; i++) {
 			prefs.putFloat("x" + i, grid.getBlocks().get(i).getX());
 			prefs.putFloat("y" + i, grid.getBlocks().get(i).getY());
 			prefs.putFloat("val" + i, grid.getBlocks().get(i).getValue());
-//			System.out.println("NUM: " + i);
 		}
 		
 		prefs.putInteger("score", grid.getScore());
 		
-		if(currentHighScore < score) {
+		if(score >= currentHighScore) {
 			prefs.putInteger("highscore", score);
-//			System.out.println("NEW HIGH SCORE");
 		} else {
 			prefs.putInteger("highscore", currentHighScore);
 		}
 		prefs.flush();
 		hasFlushed = true;
-//		currentHighScore = prefs.getInteger("highscore");
-//		System.out.println("CURRENT HIGH: " + currentHighScore);
 	}
 	
 	public void handleAds() {
