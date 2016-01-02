@@ -23,14 +23,9 @@ import android.widget.RelativeLayout;
 
 
 public class AndroidLauncher extends AndroidApplication implements AdsController {
-	private final int SHOW_ADS = 1;
-	private final int HIDE_ADS = 0;
 	private static final String AD_UNIT_ID_BANNER = "ca-app-pub-4335249035736245/6973840813";
 	protected AdView adView;
 	protected View gameView;
-//	AdRequest.Builder adRequestBuilder = new AdRequest.Builder();
-//	AdRequest ad = new AdRequest
-//	AdRequest ad = new AdRequest.Builder();
 	
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {

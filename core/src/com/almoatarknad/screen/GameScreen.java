@@ -59,7 +59,6 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void dispose() {
-		System.out.println("DISPOSING");
 		game.saveState();
 //		game = null;
 	}

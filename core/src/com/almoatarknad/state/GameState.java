@@ -106,7 +106,6 @@ public class GameState {
 			if(grid.isGameOver()) {
 				if(highScore >= prefs.getInteger("highscore")) {
 					prefs.putInteger("highscore", highScore);
-					System.out.println("SAVING HIGHSCORE");
 				}
 				grid.restart();
 			}
@@ -123,7 +122,6 @@ public class GameState {
 			} else if(ScreenManager.getCurrentScreen().inputManager.getIntersecting(restartButton.getHitbox())) {
 				if(highScore >= prefs.getInteger("highscore")) {
 					prefs.putInteger("highscore", highScore);
-					System.out.println("SAVING HIGHSCORE");
 				}
 				grid.restart();
 				grid.setPaused(false);
