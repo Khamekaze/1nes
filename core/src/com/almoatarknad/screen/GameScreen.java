@@ -39,6 +39,7 @@ public class GameScreen extends Screen {
 		camera.update();
 		inputManager.update();
 		game.update();
+		inputManager.update();
 	}
 
 	@Override
@@ -58,7 +59,7 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void dispose() {
-		System.out.println("DISPOSING");
+//		System.out.println("DISPOSING");
 		game.saveState();
 //		game = null;
 	}

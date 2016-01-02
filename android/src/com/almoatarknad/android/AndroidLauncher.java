@@ -28,7 +28,9 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 	private static final String AD_UNIT_ID_BANNER = "ca-app-pub-4335249035736245/6973840813";
 	protected AdView adView;
 	protected View gameView;
-	AdRequest.Builder adRequestBuilder;
+//	AdRequest.Builder adRequestBuilder = new AdRequest.Builder();
+//	AdRequest ad = new AdRequest
+//	AdRequest ad = new AdRequest.Builder();
 	
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
@@ -77,6 +79,8 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 				
 				//Mobilen
 //				builder.addTestDevice("C24EE5AFF55DC9227921D27018F6FED9");
+				
+//				
 //				AdRequest ad = new AdRequest.Builder().addTestDevice("C24EE5AFF55DC9227921D27018F6FED9").build();
 				AdRequest ad = new AdRequest.Builder().build();
 				adView.loadAd(ad);
@@ -97,8 +101,8 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 				//Mobilen
 //				builder.addTestDevice("C24EE5AFF55DC9227921D27018F6FED9");
 //				AdRequest ad = new AdRequest.Builder().addTestDevice("C24EE5AFF55DC9227921D27018F6FED9").build();
-				AdRequest ad = new AdRequest.Builder().build();
-				adView.loadAd(ad);
+//				AdRequest ad = new AdRequest.Builder().build();
+//				adView.loadAd(ad);
 				System.out.println("LOAD AD");
 			}
 		});
