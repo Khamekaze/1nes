@@ -12,6 +12,8 @@ public class TextureManager {
 	
 	private Texture current;
 	
+	private Sprite selectedIndicator = new Sprite(new Texture(Gdx.files.internal("grid/selectindicator.png")));
+	
 	public Texture b1 = new Texture(Gdx.files.internal("block/1.png"));
 	public Texture b2 = new Texture(Gdx.files.internal("block/2.png"));
 	public Texture b4 = new Texture(Gdx.files.internal("block/4.png"));
@@ -44,6 +46,10 @@ public class TextureManager {
 	
 	public TextureManager() {
 		current = b1;
+	}
+	
+	public Sprite getSelectedIndicator() {
+		return selectedIndicator;
 	}
 	
 	public Sprite getLogga() {

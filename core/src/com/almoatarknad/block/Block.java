@@ -1,5 +1,6 @@
 package com.almoatarknad.block;
 
+import com.almoatarknad.screen.ScreenManager;
 import com.almoatarknad.texture.TextureManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -19,17 +20,12 @@ public class Block {
 	private boolean active = true, movable = true;
 	private float animationTimer = 2.0f;
 	
-	private Sprite spriteSelected;
-	
 	public Block(float x, float y, int width, int height, int value) {
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
 		this.value = value;
-		spriteSelected = new Sprite(new Texture(Gdx.files.internal("grid/selectindicator.png")));
-		spriteSelected.setPosition(x, y);
-		spriteSelected.setSize(width - 2, height - 2);
 		hitBox = new Rectangle(x, y, width, height);
 		hitBox.setPosition(x, y);
 		oldX = x;
@@ -38,11 +34,9 @@ public class Block {
 	
 	public void update() {
 		if(active) {
-			spriteSelected.setPosition(x + 5, y + 5);
 			hitBox.setPosition(x, y);
 		} else if(!active) {
 			hitBox = null;
-			spriteSelected = null;
 		}
 		
 	}
@@ -50,8 +44,10 @@ public class Block {
 	public void render(SpriteBatch sb) {
 		if(active) {
 			if(selected) {
-				spriteSelected.setAlpha(0.5f);
-				spriteSelected.draw(sb);
+				ScreenManager.getCurrentScreen().textureManager.getSelectedIndicator().setAlpha(0.5f);
+				ScreenManager.getCurrentScreen().textureManager.getSelectedIndicator().setSize(width - 2, height - 2);
+				ScreenManager.getCurrentScreen().textureManager.getSelectedIndicator().setPosition(x + 5, y + 5);
+				ScreenManager.getCurrentScreen().textureManager.getSelectedIndicator().draw(sb);
 			}
 		}
 	}
