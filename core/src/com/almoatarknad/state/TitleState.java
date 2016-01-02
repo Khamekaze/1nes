@@ -23,7 +23,7 @@ public class TitleState {
 	private GameState game;
 	
 	public TitleState() {
-		logga = TextureManager.logga;
+		logga = ScreenManager.getCurrentScreen().textureManager.getLogga();
 		logga.setSize(MainGame.WIDTH / 1.5f, MainGame.WIDTH / 1.5f);
 		logga.setPosition(MainGame.WIDTH / 2 - logga.getWidth() / 2, MainGame.HEIGHT / 2);
 		play = new TitleButton(MainGame.WIDTH / 2 - 175, MainGame.HEIGHT / 2 - 250, 150, 180, 0);

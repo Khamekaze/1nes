@@ -1,5 +1,6 @@
 package com.almoatarknad.grid;
 
+import com.almoatarknad.screen.ScreenManager;
 import com.almoatarknad.texture.TextureManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -17,13 +18,9 @@ public class GridBlock {
 	private int width, height;
 	private float x, y;
 	private boolean occupied = false, available = false;
-//	private Sprite sprite;
 	private Rectangle hitBox;
 	private int value;
 	private float elapsedTime = 0f;
-	
-//	private Animation indicator;
-//	private TextureRegion[] indicatorFrames;
 	private TextureRegion currentFrame;
 	
 	public GridBlock(float x, float y) {
@@ -31,13 +28,6 @@ public class GridBlock {
 		height = 96;
 		this.x = x;
 		this.y = y;
-//		indicatorFrames = new TextureRegion[10];
-//		loadAnimation();
-//		indicator = new Animation(1f/15f, indicatorFrames);
-//		indicator.setPlayMode(PlayMode.LOOP_PINGPONG);
-//		sprite = new Sprite(new Texture(Gdx.files.internal("grid/selectindicator.png")));
-//		sprite.setPosition(x + 6, y + 6);
-//		sprite.setSize(92, 92);
 		hitBox = new Rectangle(x, y, width, height);
 		value = 0;
 	}
@@ -49,22 +39,13 @@ public class GridBlock {
 	public void render(SpriteBatch sb) {
 		if(available && !occupied) {
 			elapsedTime += Gdx.graphics.getDeltaTime();
-			TextureManager.availableBlock.setPlayMode(PlayMode.LOOP_PINGPONG);
-			currentFrame = TextureManager.availableBlock.getKeyFrame(elapsedTime);
+			ScreenManager.getCurrentScreen().textureManager.getAvailableAnim().setPlayMode(PlayMode.LOOP_PINGPONG);
+			currentFrame = ScreenManager.getCurrentScreen().textureManager.getAvailableAnim().getKeyFrame(elapsedTime);
 			sb.draw(currentFrame, x + 10, y + 8, 84, 84);
 		} else {
 			elapsedTime = 0;
 		}
 	}
-	
-//	public void loadAnimation() {
-//		for(int i = 0; i < 10; i++) {
-//			Texture texture = new Texture(Gdx.files.internal("block/animation/loading_box_sequence" + i + ".png" ));
-//			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-//			TextureRegion sprite = new TextureRegion(texture);
-//			indicatorFrames[i] = sprite;
-//		}
-//	}
 	
 	public float getX() {
 		return x;

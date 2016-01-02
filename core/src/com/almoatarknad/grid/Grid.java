@@ -237,35 +237,7 @@ public class Grid {
 		}
 		
 		for(Block b : blocks) {
-			if(b.getValue() == 1) {
-				sb.draw(TextureManager.b1, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 2) {
-				sb.draw(TextureManager.b2, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 4) {
-				sb.draw(TextureManager.b4, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 8) {
-				sb.draw(TextureManager.b8, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 16) {
-				sb.draw(TextureManager.b16, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 32) {
-				sb.draw(TextureManager.b32, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 64) {
-				sb.draw(TextureManager.b64, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 128) {
-				sb.draw(TextureManager.b128, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 256) {
-				sb.draw(TextureManager.b256, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 512) {
-				sb.draw(TextureManager.b512, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 1024) {
-				sb.draw(TextureManager.b1024, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 2048) {
-				sb.draw(TextureManager.b2048, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 4096) {
-				sb.draw(TextureManager.b4096, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			} else if(b.getValue() == 8192) {
-				sb.draw(TextureManager.b8192, b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
-			}
+			sb.draw(ScreenManager.getCurrentScreen().textureManager.getBlockTexture(b.getValue()), b.getX() + 5, b.getY() + 5, b.getWidth() - 5, b.getHeight() - 5);
 			
 			if(b.isSelected()) {
 				b.render(sb);
@@ -764,12 +736,15 @@ public class Grid {
 	
 	public void initSavedState(Preferences prefs) {
 		Block b;
+		currentMaxTileValue = 0;
 		for(int i = 0; i < 32; i++) {
 			if(prefs.getFloat("x" + i) != 0) {
 				float x = prefs.getFloat("x" + i);
 				float y = prefs.getFloat("y" + i);
 				int val = (int) prefs.getFloat("val" + i);
 				b = new Block(x, y, 96, 96, val);
+				if(val > currentMaxTileValue)
+					currentMaxTileValue = val;
 				blocks.add(b);
 				b = null;
 			}

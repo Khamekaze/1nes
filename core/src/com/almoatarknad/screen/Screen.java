@@ -2,6 +2,7 @@ package com.almoatarknad.screen;
 
 import com.almoatarknad.MainGame;
 import com.almoatarknad.input.InputManager;
+import com.almoatarknad.texture.TextureManager;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
@@ -12,6 +13,7 @@ public abstract class Screen {
 	public InputManager inputManager = new InputManager();
 	public OrthographicCamera camera = new OrthographicCamera(MainGame.WIDTH, MainGame.HEIGHT);
 	public Viewport viewPort = new StretchViewport(MainGame.WIDTH, MainGame.HEIGHT, camera);
+	public TextureManager textureManager = new TextureManager();
 
 	public abstract void create();
 	
