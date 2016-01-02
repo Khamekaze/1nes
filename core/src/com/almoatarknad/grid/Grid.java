@@ -41,7 +41,7 @@ public class Grid {
 	private boolean animatedMerge = false, animationRun = false, mergeAnimation = false;
 	private float elapsedTime = 0.0f;
 	private int stageOfLoop = 0;
-	private boolean checkBoundsBool = false;
+	private boolean checkBoundsBool = false, touched = false;
 	
 	private Sprite logga;
 	private Sprite bg;
@@ -122,6 +122,9 @@ public class Grid {
 	}
 	
 	public void update() {
+		if(!Gdx.input.isTouched()) {
+			touched = false;
+		}
 		if(!gameOver) {
 			if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().overlaps(pauseButton.getHitbox())) {
 				if(!paused)
@@ -136,13 +139,18 @@ public class Grid {
 				if(stageOfLoop == 1) {
 //					System.out.println(stageOfLoop);
 					setSelectedBlock();
+					if(checkBoundsBool) {
+//						setSelectedBlock();
+						checkBounds();
+					}
+						
 				}
 					
 //				if(!endRound && !newRound) {
-					if(stageOfLoop == 1 && checkBoundsBool) {
-//						System.out.println(stageOfLoop);
-						checkBounds();
-					}
+//					if(stageOfLoop == 1 && checkBoundsBool) {
+////						System.out.println(stageOfLoop);
+//						checkBounds();
+//					}
 						
 					
 					if(stageOfLoop == 3) {
@@ -329,66 +337,96 @@ public class Grid {
 	}
 	
 	public void setSelectedBlock() {
-		if(Gdx.input.justTouched()) {
-			newRound = false;
-			endRound = false;
-			int selectedAmount = 0;
+		for(GridBlock g : gridBlocks) {
 			for(Block b : blocks) {
-				if(b.isSelected())
-					selectedAmount++;
-			}
+				if(b.isMovable()) {
+					if(Gdx.input.isTouched() && b.isActive() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(b.getHitbox()) && !touched) {
+						if(!b.isSelected() && selectedBlock == null) {
+							b.setSelected(true);
+							selectedBlock = b;
+							selectedBlock.setSelected(true);
+							checkBoundsBool = true;
+							touched = true;
+//							System.out.println("SELECTED");
+						}
 
-			for(GridBlock g : gridBlocks) {
-				for(Block b : blocks) {
-					if(b.isMovable()) {
-						if(Gdx.input.justTouched() && b.isActive() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(b.getHitbox())) {
-							if(selectedAmount == 1 && selectedBlock != null && selectedBlock.equals(b) && !selectedNew) {
-								b.setSelected(false);
-								endRound = true;
-								newRound = false;
-								stageOfLoop = 7;
-								checkBoundsBool = false;
+					} else if(!Gdx.input.isTouched() && b.isSelected()) {
+						b.setSelected(false);
+						endRound = true;
+						newRound = false;
+						stageOfLoop = 7;
+						checkBoundsBool = false;
+						touched = false;
+//						System.out.println("DESELECTED");
+					} else if(selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getIntersecting(g.getHitBox()) && !g.isOccupied() && g.isAvailable()) {
+						if(!moved && b.isSelected()) {
+							if(g.getX() > b.getX() && g.getY() == b.getY()) {
+								direction = b.right;
+								b.setMovable(false);
+								stageOfLoop = 3;
+							} else if(g.getX() < b.getX() && g.getY() == b.getY()) {
+								direction = b.left;
+								b.setMovable(false);
+								stageOfLoop = 3;
+							} else if(g.getY() > b.getY() && g.getX() == b.getX()) {
+								direction = b.up;
+								b.setMovable(false);
+								stageOfLoop = 3;
+							} else if(g.getY() < b.getY() && g.getX() == b.getX()) {
+								direction = b.down;
+								b.setMovable(false);
+								stageOfLoop = 3;
 							}
 
-							if(selectedAmount == 0) {
-								b.setSelected(true);
-								selectedBlock = b;
-								selectedBlock.setSelected(true);
-								checkBoundsBool = true;
-							}
-
-						} else if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(g.getHitBox()) && !g.isOccupied() && g.isAvailable()) {
-							if(!moved && b.isSelected()) {
-								if(g.getX() > b.getX() && g.getY() == b.getY()) {
-									direction = b.right;
-									b.setMovable(false);
-									stageOfLoop = 3;
-								} else if(g.getX() < b.getX() && g.getY() == b.getY()) {
-									direction = b.left;
-									b.setMovable(false);
-									stageOfLoop = 3;
-								} else if(g.getY() > b.getY() && g.getX() == b.getX()) {
-									direction = b.up;
-									b.setMovable(false);
-									stageOfLoop = 3;
-								} else if(g.getY() < b.getY() && g.getX() == b.getX()) {
-									direction = b.down;
-									b.setMovable(false);
+						}
+					} else if(selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x > selectedBlock.getX() ||
+							selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x < selectedBlock.getX() ||
+									selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y > selectedBlock.getY() ||
+											selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y < selectedBlock.getY()) {
+//						System.out.println("MERGE LOGIC");
+						//RIGHT
+						if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x > selectedBlock.getX() + selectedBlock.getWidth() &&
+								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y >= selectedBlock.getY() &&
+								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y <= selectedBlock.getY() + selectedBlock.getHeight()) {
+							if(b.getX() == selectedBlock.getX() + selectedBlock.getWidth() && b.getY() == selectedBlock.getY()) {
+								if(b.getX() == g.getX() && b.getY() == g.getY() && g.getValue() == selectedBlock.getValue()) {
+									merge(b, selectedBlock);
 									stageOfLoop = 3;
 								}
 								
 							}
-						}
-						
-					if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(g.getHitBox()) && g.isOccupied() && g.isAvailable()) {
-						if(selectedAmount == 1 && selectedBlock != null && g.getValue() == selectedBlock.getValue()) {
-							if(b.getX() == g.getX() && b.getY() == g.getY()) {
-								merge(b, selectedBlock);
-								stageOfLoop = 3;
+						//LEFT	
+						} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x < selectedBlock.getX() &&
+								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y >= selectedBlock.getY() &&
+								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y <= selectedBlock.getY() + selectedBlock.getHeight()) {
+							if(b.getX() == selectedBlock.getX() - selectedBlock.getWidth() && b.getY() == selectedBlock.getY()) {
+								if(b.getX() == g.getX() && b.getY() == g.getY() && g.getValue() == selectedBlock.getValue()) {
+									merge(b, selectedBlock);
+									stageOfLoop = 3;
+								}
+							}
+						//UP	
+						} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y > selectedBlock.getY() + selectedBlock.getHeight() &&
+								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x >= selectedBlock.getX() &&
+								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x <= selectedBlock.getX() + selectedBlock.getWidth()) {
+							if(b.getY() == selectedBlock.getY() + selectedBlock.getHeight() && b.getX() == selectedBlock.getX()) {
+								if(b.getX() == g.getX() && b.getY() == g.getY() && g.getValue() == selectedBlock.getValue()) {
+									merge(b, selectedBlock);
+									stageOfLoop = 3;
+								}
+							}
+						//DOWN	
+						} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y < selectedBlock.getY()&&
+								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x >= selectedBlock.getX() &&
+								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x <= selectedBlock.getX() + selectedBlock.getWidth()) {
+							if(b.getY() == selectedBlock.getY() - selectedBlock.getHeight() && b.getX() == selectedBlock.getX()) {
+								if(b.getX() == g.getX() && b.getY() == g.getY() && g.getValue() == selectedBlock.getValue()) {
+									merge(b, selectedBlock);
+									stageOfLoop = 3;
+								}
 							}
 						}
 					}
-				}
 				}
 			}
 		}
