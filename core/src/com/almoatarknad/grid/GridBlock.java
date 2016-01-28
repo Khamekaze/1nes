@@ -18,7 +18,6 @@ public class GridBlock {
 	private int width, height;
 	private float x, y;
 	private boolean occupied = false, available = false;
-	private Rectangle hitBox;
 	private int value;
 	private float elapsedTime = 0f;
 	private TextureRegion currentFrame;
@@ -28,7 +27,6 @@ public class GridBlock {
 		height = 96;
 		this.x = x;
 		this.y = y;
-		hitBox = new Rectangle(x, y, width, height);
 		value = 0;
 	}
 	
@@ -69,10 +67,6 @@ public class GridBlock {
 	
 	public boolean isAvailable() {
 		return available;
-	}
-	
-	public Rectangle getHitBox() {
-		return hitBox;
 	}
 	
 	public void setValue(int value) {

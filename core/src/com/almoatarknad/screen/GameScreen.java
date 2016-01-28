@@ -35,11 +35,12 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void update() {
+//		inputManager.update();
 		camera.position.set(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 0);
 		camera.update();
 		inputManager.update();
 		game.update();
-		inputManager.update();
+//		inputManager.update();
 	}
 
 	@Override
@@ -54,18 +55,16 @@ public class GameScreen extends Screen {
 	public void resize(int width, int height) {
 		viewPort.update(width, height);
 		camera.translate(0, 0);
-		
 	}
 
 	@Override
 	public void dispose() {
 		game.saveState();
-//		game = null;
 	}
 
 	@Override
 	public void pause() {
-//		game.saveState();
+		
 	}
 
 	@Override

@@ -134,7 +134,6 @@ public class TitleState {
 				cameraX = MainGame.WIDTH * 2;
 				cameraSpeed = 30f;
 				moveToLoading = false;
-				
 			}
 		}
 	}
@@ -147,5 +146,4 @@ public class TitleState {
 		cameraY = MainGame.HEIGHT / 2;
 		delay = 1f;
 	}
-
 }

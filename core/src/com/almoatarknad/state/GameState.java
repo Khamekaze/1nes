@@ -4,17 +4,16 @@ import com.almoatarknad.MainGame;
 import com.almoatarknad.ads.AdsController;
 import com.almoatarknad.grid.Grid;
 import com.almoatarknad.input.MenuButton;
+import com.almoatarknad.input.MuteButton;
 import com.almoatarknad.input.RestartButton;
 import com.almoatarknad.input.UnpauseButton;
 import com.almoatarknad.screen.ScreenManager;
 import com.almoatarknad.screen.TitleScreen;
-import com.almoatarknad.texture.TextureManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
@@ -39,7 +38,6 @@ public class GameState {
 	private FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("font/nulshockbd.ttf"));
 	private FreeTypeFontParameter parameter = new FreeTypeFontParameter();
 	private BitmapFont scoreFont, highscoreFont;
-	private GlyphLayout layout = new GlyphLayout();
 	
 	private Preferences prefs;
 	private int highScore;
@@ -54,7 +52,7 @@ public class GameState {
 		restartButton = new RestartButton(MainGame.WIDTH / 2 - 78, MainGame.HEIGHT / 2 - 100);
 		menuButton = new MenuButton(MainGame.WIDTH / 2 - 125, MainGame.HEIGHT / 2);
 		unpauseButton = new UnpauseButton(MainGame.WIDTH / 2 - 78, MainGame.HEIGHT / 2 + 100);
-		highScore = prefs.getInteger("highscore");
+		highScore = prefs.getInteger("highscore", 0);
 		
 		gameOverOverlay = new Sprite(new Texture(Gdx.files.internal("gui/gameoverlay.png")));
 		gameOverOverlay.setPosition(0, MainGame.HEIGHT/ 2 - (gameOverOverlay.getHeight() / 2));
@@ -74,11 +72,11 @@ public class GameState {
 		scoreFont = generator.generateFont(parameter);
 		highscoreFont = generator.generateFont(parameter);
 		redCounter = new Sprite(new Texture(Gdx.files.internal("gui/score/scorecounter.png")));
-		redCounter.setSize(120, 26.4f);
+		redCounter.setSize(144, 26.4f);
 		redCounter.setPosition(18, MainGame.HEIGHT - redCounter.getHeight() - 260);
 		
 		blueCounter = new Sprite(new Texture(Gdx.files.internal("gui/score/highscorecounter.png")));
-		blueCounter.setSize(120, 26.4f);
+		blueCounter.setSize(144, 26.4f);
 		blueCounter.setPosition(MainGame.WIDTH - blueCounter.getWidth() - 18, MainGame.HEIGHT - blueCounter.getHeight() - 260);
 		
 		scoreFont.setColor(Color.WHITE);
@@ -88,8 +86,10 @@ public class GameState {
 	}
 	
 	public void update() {
-		if(!grid.isPaused())
+		if(!grid.isPaused()) {
 			grid.update();
+		}
+			
 		score = grid.getScore();
 		if(score >= highScore) {
 			highScore = score;
@@ -104,10 +104,8 @@ public class GameState {
 		if(Gdx.input.justTouched()
 							 && ScreenManager.getCurrentScreen().inputManager.getIntersecting(restartButton.getHitbox())) {
 			if(grid.isGameOver()) {
-				if(highScore >= prefs.getInteger("highscore")) {
-					prefs.putInteger("highscore", highScore);
-				}
 				grid.restart();
+				saveState();
 			}
 		}
 		
@@ -116,18 +114,17 @@ public class GameState {
 				grid.newRound();
 				grid.endRound();
 				grid.setPaused(false);
+				saveState();
 				ScreenManager.setScreen(new TitleScreen(title));
+				
 			} else if(ScreenManager.getCurrentScreen().inputManager.getIntersecting(unpauseButton.getHitbox())) {
 				grid.setPaused(false);
 			} else if(ScreenManager.getCurrentScreen().inputManager.getIntersecting(restartButton.getHitbox())) {
-				if(highScore >= prefs.getInteger("highscore")) {
-					prefs.putInteger("highscore", highScore);
-				}
 				grid.restart();
 				grid.setPaused(false);
+				saveState();
 			}
 		}
-		
 		handleAds();
 	}
 	
@@ -137,7 +134,6 @@ public class GameState {
 		blueCounter.draw(sb);
 		scoreCounter(sb);
 		highScoreCounter(sb);
-		
 		if(grid.isGameOver()) {
 			backGroundFade.draw(sb);
 			gameOverOverlay.draw(sb);
@@ -201,6 +197,25 @@ public class GameState {
 			scoreFont.draw(sb, String.valueOf(thirdNumber), redCounter.getX() + 51, redCounter.getY() + 20);
 			scoreFont.draw(sb, String.valueOf(fourthNumber), redCounter.getX() + 75, redCounter.getY() + 20);
 			scoreFont.draw(sb, String.valueOf(fifthNumber), redCounter.getX() + 99, redCounter.getY() + 20);
+		} else if(score >= 100000 && score < 1000000) {
+			int sixthNumber = score % 10;
+			int newAmount = score - sixthNumber;
+			newAmount /= 10;
+			int fifthNumber = newAmount % 10;
+			newAmount /= 10;
+			int fourthNumber = newAmount % 10;
+			newAmount /= 10;
+			int thirdNumber = newAmount % 10;
+			newAmount /= 10;
+			int secondNumber = newAmount % 10;
+			newAmount /= 10;
+			int firstNumber = newAmount;
+			scoreFont.draw(sb, String.valueOf(firstNumber), redCounter.getX() + 2, redCounter.getY() + 20);
+			scoreFont.draw(sb, String.valueOf(secondNumber), redCounter.getX() + 27, redCounter.getY() + 20);
+			scoreFont.draw(sb, String.valueOf(thirdNumber), redCounter.getX() + 51, redCounter.getY() + 20);
+			scoreFont.draw(sb, String.valueOf(fourthNumber), redCounter.getX() + 75, redCounter.getY() + 20);
+			scoreFont.draw(sb, String.valueOf(fifthNumber), redCounter.getX() + 99, redCounter.getY() + 20);
+			scoreFont.draw(sb, String.valueOf(sixthNumber), redCounter.getX() + 123, redCounter.getY() + 20);
 		}
 	}
 	
@@ -253,10 +268,30 @@ public class GameState {
 			highscoreFont.draw(sb, String.valueOf(thirdNumber), blueCounter.getX() + blueCounter.getWidth() - 70, blueCounter.getY() + 20);
 			highscoreFont.draw(sb, String.valueOf(secondNumber), blueCounter.getX() + blueCounter.getWidth() - 95, blueCounter.getY() + 20);
 			highscoreFont.draw(sb, String.valueOf(firstNumber), blueCounter.getX() + blueCounter.getWidth() - 120, blueCounter.getY() + 20);
+		} else if(highScore >= 100000 && highScore < 1000000) {
+			int sixthNumber = highScore % 10;
+			int newAmount = highScore - sixthNumber;
+			newAmount /= 10;
+			int fifthNumber = newAmount % 10;
+			newAmount /= 10;
+			int fourthNumber = newAmount % 10;
+			newAmount /= 10;
+			int thirdNumber = newAmount % 10;
+			newAmount /= 10;
+			int secondNumber = newAmount % 10;
+			newAmount /= 10;
+			int firstNumber = newAmount;
+			highscoreFont.draw(sb, String.valueOf(sixthNumber), blueCounter.getX() + blueCounter.getWidth() - 19, blueCounter.getY() + 20);
+			highscoreFont.draw(sb, String.valueOf(fifthNumber), blueCounter.getX() + blueCounter.getWidth() - 45, blueCounter.getY() + 20);
+			highscoreFont.draw(sb, String.valueOf(fourthNumber), blueCounter.getX() + blueCounter.getWidth() - 70, blueCounter.getY() + 20);
+			highscoreFont.draw(sb, String.valueOf(thirdNumber), blueCounter.getX() + blueCounter.getWidth() - 95, blueCounter.getY() + 20);
+			highscoreFont.draw(sb, String.valueOf(secondNumber), blueCounter.getX() + blueCounter.getWidth() - 120, blueCounter.getY() + 20);
+			highscoreFont.draw(sb, String.valueOf(firstNumber), blueCounter.getX() + blueCounter.getWidth() - 145, blueCounter.getY() + 20);
 		}
 	}
 	
 	public void saveState() {
+		System.out.println("SAVE");
 		hasFlushed = false;
 		int currentHighScore = prefs.getInteger("highscore");
 		prefs.clear();
@@ -268,8 +303,8 @@ public class GameState {
 		
 		prefs.putInteger("score", grid.getScore());
 		
-		if(score >= currentHighScore) {
-			prefs.putInteger("highscore", score);
+		if(highScore >= currentHighScore) {
+			prefs.putInteger("highscore", highScore);
 		} else {
 			prefs.putInteger("highscore", currentHighScore);
 		}

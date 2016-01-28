@@ -4,6 +4,7 @@ import com.almoatarknad.screen.ScreenManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 public class InputManager implements InputProcessor {
@@ -30,6 +31,10 @@ public class InputManager implements InputProcessor {
 	
 	public Rectangle getMouseHitbox() {
 		return mouseHitbox;
+	}
+	
+	public Vector3 getInputPos() {
+		return input;
 	}
 
 	@Override

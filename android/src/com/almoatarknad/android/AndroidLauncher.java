@@ -80,7 +80,7 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 				AdRequest ad = new AdRequest.Builder().build();
 				adView.loadAd(ad);
 				adView.setVisibility(View.VISIBLE);
-				System.out.println("SHOW AD");
+//				System.out.println("SHOW AD");
 			}
 		});
 	}
@@ -98,7 +98,7 @@ public class AndroidLauncher extends AndroidApplication implements AdsController
 //				AdRequest ad = new AdRequest.Builder().addTestDevice("C24EE5AFF55DC9227921D27018F6FED9").build();
 //				AdRequest ad = new AdRequest.Builder().build();
 //				adView.loadAd(ad);
-				System.out.println("LOAD AD");
+//				System.out.println("LOAD AD");
 			}
 		});
 	}

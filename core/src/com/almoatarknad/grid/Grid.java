@@ -4,9 +4,9 @@ import java.util.Random;
 
 import com.almoatarknad.MainGame;
 import com.almoatarknad.block.Block;
+import com.almoatarknad.input.MuteButton;
 import com.almoatarknad.input.PauseButton;
 import com.almoatarknad.screen.ScreenManager;
-import com.almoatarknad.texture.TextureManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Sound;
@@ -16,21 +16,18 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 
 public class Grid {
 	
-	private float x, y, oldX = 0, oldY = 0, newX = 0, newY = 0, moveX = 0, moveY = 0, oldGX = 0, oldGY = 0;
-	private boolean gameOver = false, hasRestarted = false, selectedNew = false;
+	private float x, y, oldX = 0, oldY = 0;
+	private boolean gameOver = false, hasRestarted = false, muted = false;
 	private int blocksBlocked = 0;
 	private int currentMaxTileValue = 0;
 	private int score = 0;
 	private int direction = -1;
 	private int mergeDirection = -1;
 	private int width, height;
-	private Sprite gridSprite;
 	private Array<Block> blocks;
 	private Array<GridBlock> gridBlocks;
 	private Block startBlock;
@@ -47,6 +44,8 @@ public class Grid {
 	private Sprite bg;
 	private Sprite gridBG;
 	
+	private MuteButton muteButton;
+	
 	private Animation gridAnimUp, gridAnimLeft, gridAnimRight, gridAnimDown;
 	private TextureRegion[] upFrames, toLeftFrames, toRightFrames, downFrames;
 	private TextureRegion currentFrame;
@@ -56,7 +55,6 @@ public class Grid {
 	
 	private Sound bell;
 	private Sound swish;
-//	private Rectangle restartButton;
 	private PauseButton pauseButton;
 	
 	public Grid(float x, float y, int width, int height, Preferences prefs) {
@@ -95,17 +93,9 @@ public class Grid {
 		gridAnimLeft = new Animation(1f/40f, toLeftFrames);
 		gridAnimRight = new Animation(1f/40f, toRightFrames);
 		
-		gridSprite = new Sprite(gridAnimUp.getKeyFrame(0));
-		gridSprite.setPosition(x, y);
-		gridSprite.setSize(width, height);
-		
-//		selectIndicator = new Sprite(new Texture(Gdx.files.internal("grid/selectindicator.png")));
-		
 		logga.setSize(160, 160);
 		logga.setPosition(loggaX, loggaY);
 		logga.getTexture().setFilter(TextureFilter.Linear, TextureFilter.Linear);
-		
-//		restartButton = new Rectangle(logga.getX(), logga.getY(), logga.getWidth(), logga.getHeight());
 		
 		bg.setSize(MainGame.WIDTH, MainGame.HEIGHT);
 		bg.setPosition(0, 0);
@@ -118,7 +108,8 @@ public class Grid {
 		swish = Gdx.audio.newSound(Gdx.files.internal("swish.ogg"));
 		
 		pauseButton = new PauseButton(MainGame.WIDTH / 2 - 50, y + 390);
-		score = prefs.getInteger("score");
+		muteButton = new MuteButton(10, MainGame.HEIGHT - 70);
+		score = prefs.getInteger("score", 0);
 	}
 	
 	public void update() {
@@ -132,81 +123,72 @@ public class Grid {
 			}
 			if(!paused) {
 				if(stageOfLoop == 0) {
-//					System.out.println(stageOfLoop);
 					newRound();
 				}
-					
+
 				if(stageOfLoop == 1) {
-//					System.out.println(stageOfLoop);
 					setSelectedBlock();
 					if(checkBoundsBool) {
-//						setSelectedBlock();
 						checkBounds();
 					}
-						
-				}
-					
-//				if(!endRound && !newRound) {
-//					if(stageOfLoop == 1 && checkBoundsBool) {
-////						System.out.println(stageOfLoop);
-//						checkBounds();
-//					}
-						
-					
-					if(stageOfLoop == 3) {
-//						System.out.println(stageOfLoop);
-						moveBlock();
-					}
-						
-					if(stageOfLoop == 4) {
-//						System.out.println(stageOfLoop);
-						updateFreeBlocks();
-					}
-					
-					if(stageOfLoop == 5) {
-						createBlock();
-					}
-					if(stageOfLoop == 6) {
-//						System.out.println(stageOfLoop);
-						checkIfOccupied();
-					}
-						
-//					logga.setPosition(MainGame.WIDTH / 2 - 80, loggaY);
-					if(stageOfLoop == 7) {
-						for(Block b : blocks) {
-							b.update();
-							if(!b.isMovable()) {
-								animatedMerge = true;
-								animationRun = true;
-								elapsedTime = 0;
-							}
 
-							if(animatedMerge) {
-								b.animate(direction);
-//								stageOfLoop = 7;
-							} else if(!animatedMerge && !animationRun) {
-								direction = -1;
-//								stageOfLoop = 7;
-							}
+				}
+
+
+				if(stageOfLoop == 3) {
+					moveBlock();
+				}
+
+				if(stageOfLoop == 4) {
+					updateFreeBlocks();
+				}
+
+				if(stageOfLoop == 5) {
+					createBlock();
+				}
+				if(stageOfLoop == 6) {
+					checkIfOccupied();
+				}
+
+				if(stageOfLoop == 7) {
+					for(Block b : blocks) {
+						b.update();
+						if(!b.isMovable()) {
+							animatedMerge = true;
+							animationRun = true;
+							elapsedTime = 0;
 						}
-//						System.out.println(stageOfLoop);
-						stageOfLoop = 8;
+
+						if(animatedMerge) {
+							b.animate(direction);
+						} else if(!animatedMerge && !animationRun) {
+							direction = -1;
+						}
 					}
+					stageOfLoop = 8;
 				}
-				
-				if(stageOfLoop == 8) {
-//					System.out.println(stageOfLoop);
-					checkBounds();
-					endRound();
-				}
-				
 			}
-//		}
+
+			if(stageOfLoop == 8) {
+				checkBounds();
+				endRound();
+			}
+		}
 		
+		if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(muteButton.getHitBox())) {
+			if(muted) {
+				muted = false;
+				muteButton.setMutedBool(muted);
+			} else if(!muted) {
+				muted = true;
+				muteButton.setMutedBool(muted);
+			}
+		}
 	}
 	
 	public void render(SpriteBatch sb) {
 		bg.draw(sb);
+		muteButton.render(sb);
 		elapsedTime += Gdx.graphics.getDeltaTime();
 		logga.draw(sb);
 		gridBG.draw(sb);
@@ -312,14 +294,17 @@ public class Grid {
 		for(GridBlock g : gridBlocks) {
 			for(Block b : blocks) {
 				if(b.isMovable()) {
-					if(Gdx.input.isTouched() && b.isActive() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(b.getHitbox()) && !touched) {
+					if(Gdx.input.isTouched() && b.isActive() && !touched) {
+						if(ScreenManager.getCurrentScreen().inputManager.getInputPos().x >= b.getX() && 
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().x <= b.getX() + 96 &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().y >= b.getY() && 
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().y <= b.getY() + 96)
 						if(!b.isSelected() && selectedBlock == null) {
 							b.setSelected(true);
 							selectedBlock = b;
 							selectedBlock.setSelected(true);
 							checkBoundsBool = true;
 							touched = true;
-//							System.out.println("SELECTED");
 						}
 
 					} else if(!Gdx.input.isTouched() && b.isSelected()) {
@@ -329,37 +314,40 @@ public class Grid {
 						stageOfLoop = 7;
 						checkBoundsBool = false;
 						touched = false;
-//						System.out.println("DESELECTED");
-					} else if(selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getIntersecting(g.getHitBox()) && !g.isOccupied() && g.isAvailable()) {
-						if(!moved && b.isSelected()) {
-							if(g.getX() > b.getX() && g.getY() == b.getY()) {
-								direction = b.right;
-								b.setMovable(false);
-								stageOfLoop = 3;
-							} else if(g.getX() < b.getX() && g.getY() == b.getY()) {
-								direction = b.left;
-								b.setMovable(false);
-								stageOfLoop = 3;
-							} else if(g.getY() > b.getY() && g.getX() == b.getX()) {
-								direction = b.up;
-								b.setMovable(false);
-								stageOfLoop = 3;
-							} else if(g.getY() < b.getY() && g.getX() == b.getX()) {
-								direction = b.down;
-								b.setMovable(false);
-								stageOfLoop = 3;
+					} else if(selectedBlock != null && !g.isOccupied() && g.isAvailable()) {
+						if(ScreenManager.getCurrentScreen().inputManager.getInputPos().x >= g.getX() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().x <= g.getX() + 96 &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().y >= g.getY() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().y <= g.getY() + 96) {
+							if(!moved && b.isSelected()) {
+								if(g.getX() > b.getX() && g.getY() == b.getY()) {
+									direction = b.right;
+									b.setMovable(false);
+									stageOfLoop = 3;
+								} else if(g.getX() < b.getX() && g.getY() == b.getY()) {
+									direction = b.left;
+									b.setMovable(false);
+									stageOfLoop = 3;
+								} else if(g.getY() > b.getY() && g.getX() == b.getX()) {
+									direction = b.up;
+									b.setMovable(false);
+									stageOfLoop = 3;
+								} else if(g.getY() < b.getY() && g.getX() == b.getX()) {
+									direction = b.down;
+									b.setMovable(false);
+									stageOfLoop = 3;
+								}
 							}
 
 						}
-					} else if(selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x > selectedBlock.getX() ||
-							selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x < selectedBlock.getX() ||
-									selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y > selectedBlock.getY() ||
-											selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y < selectedBlock.getY()) {
-//						System.out.println("MERGE LOGIC");
+					} else if(selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getInputPos().x > selectedBlock.getX() ||
+							selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getInputPos().x < selectedBlock.getX() ||
+									selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getInputPos().y > selectedBlock.getY() ||
+											selectedBlock != null && ScreenManager.getCurrentScreen().inputManager.getInputPos().y < selectedBlock.getY()) {
 						//RIGHT
-						if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x > selectedBlock.getX() + selectedBlock.getWidth() &&
-								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y >= selectedBlock.getY() &&
-								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y <= selectedBlock.getY() + selectedBlock.getHeight()) {
+						if(ScreenManager.getCurrentScreen().inputManager.getInputPos().x > selectedBlock.getX() + selectedBlock.getWidth() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().y >= selectedBlock.getY() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().y <= selectedBlock.getY() + selectedBlock.getHeight()) {
 							if(b.getX() == selectedBlock.getX() + selectedBlock.getWidth() && b.getY() == selectedBlock.getY()) {
 								if(b.getX() == g.getX() && b.getY() == g.getY() && g.getValue() == selectedBlock.getValue()) {
 									merge(b, selectedBlock);
@@ -368,9 +356,9 @@ public class Grid {
 								
 							}
 						//LEFT	
-						} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x < selectedBlock.getX() &&
-								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y >= selectedBlock.getY() &&
-								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y <= selectedBlock.getY() + selectedBlock.getHeight()) {
+						} else if(ScreenManager.getCurrentScreen().inputManager.getInputPos().x < selectedBlock.getX() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().y >= selectedBlock.getY() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().y <= selectedBlock.getY() + selectedBlock.getHeight()) {
 							if(b.getX() == selectedBlock.getX() - selectedBlock.getWidth() && b.getY() == selectedBlock.getY()) {
 								if(b.getX() == g.getX() && b.getY() == g.getY() && g.getValue() == selectedBlock.getValue()) {
 									merge(b, selectedBlock);
@@ -378,9 +366,9 @@ public class Grid {
 								}
 							}
 						//UP	
-						} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y > selectedBlock.getY() + selectedBlock.getHeight() &&
-								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x >= selectedBlock.getX() &&
-								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x <= selectedBlock.getX() + selectedBlock.getWidth()) {
+						} else if(ScreenManager.getCurrentScreen().inputManager.getInputPos().y > selectedBlock.getY() + selectedBlock.getHeight() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().x >= selectedBlock.getX() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().x <= selectedBlock.getX() + selectedBlock.getWidth()) {
 							if(b.getY() == selectedBlock.getY() + selectedBlock.getHeight() && b.getX() == selectedBlock.getX()) {
 								if(b.getX() == g.getX() && b.getY() == g.getY() && g.getValue() == selectedBlock.getValue()) {
 									merge(b, selectedBlock);
@@ -388,9 +376,9 @@ public class Grid {
 								}
 							}
 						//DOWN	
-						} else if(ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().y < selectedBlock.getY()&&
-								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x >= selectedBlock.getX() &&
-								ScreenManager.getCurrentScreen().inputManager.getMouseHitbox().x <= selectedBlock.getX() + selectedBlock.getWidth()) {
+						} else if(ScreenManager.getCurrentScreen().inputManager.getInputPos().y < selectedBlock.getY()&&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().x >= selectedBlock.getX() &&
+								ScreenManager.getCurrentScreen().inputManager.getInputPos().x <= selectedBlock.getX() + selectedBlock.getWidth()) {
 							if(b.getY() == selectedBlock.getY() - selectedBlock.getHeight() && b.getX() == selectedBlock.getX()) {
 								if(b.getX() == g.getX() && b.getY() == g.getY() && g.getValue() == selectedBlock.getValue()) {
 									merge(b, selectedBlock);
@@ -417,71 +405,71 @@ public class Grid {
 	
 	public void createBlock() {
 		if(moved) {
-		Block block = null;
-		float randomX = 0;
-		float randomY = 0;
-		int randomValue = 0;
-		if(currentMaxTileValue < 16) {
-			randomValue = 1;
-		} else if(currentMaxTileValue >= 16 && currentMaxTileValue < 64) {
-			randomValue = random.nextInt(2) + 1;
-		} else if(currentMaxTileValue >= 64 && currentMaxTileValue < 256) {
-			randomValue = random.nextInt(3) + 1;
-			if(randomValue == 3) {
-				randomValue = 4;
+			Block block = null;
+			float randomX = 0;
+			float randomY = 0;
+			int randomValue = 0;
+			if(currentMaxTileValue < 16) {
+				randomValue = 1;
+			} else if(currentMaxTileValue >= 16 && currentMaxTileValue < 64) {
+				randomValue = random.nextInt(2) + 1;
+			} else if(currentMaxTileValue >= 64 && currentMaxTileValue < 256) {
+				randomValue = random.nextInt(3) + 1;
+				if(randomValue == 3) {
+					randomValue = 4;
+				}
+			} else if(currentMaxTileValue >= 256 && currentMaxTileValue < 1024) {
+				randomValue = random.nextInt(4) + 1;
+				if(randomValue == 4) {
+					randomValue = 8;
+				} else if(randomValue == 3) {
+					randomValue = 4;
+				}
+			} else if(currentMaxTileValue >= 1024 && currentMaxTileValue < 2048) {
+				randomValue = random.nextInt(5) + 1;
+				if(randomValue == 5) {
+					randomValue = 16;
+				} else if(randomValue == 4) {
+					randomValue = 8;
+				} else if(randomValue == 3) {
+					randomValue = 4;
+				}
+			} else if(currentMaxTileValue >= 2048) {
+				randomValue = random.nextInt(6) + 1;
+				if(randomValue == 6) {
+					randomValue = 32;
+				} else if(randomValue == 5) {
+					randomValue = 16;
+				} else if(randomValue == 4) {
+					randomValue = 8;
+				} else if(randomValue == 3) {
+					randomValue = 4;
+				}
 			}
-		} else if(currentMaxTileValue >= 256 && currentMaxTileValue < 1024) {
-			randomValue = random.nextInt(4) + 1;
-			if(randomValue == 4) {
-				randomValue = 8;
-			} else if(randomValue == 3) {
-				randomValue = 4;
-			}
-		} else if(currentMaxTileValue >= 1024 && currentMaxTileValue < 2048) {
-			randomValue = random.nextInt(5) + 1;
-			if(randomValue == 5) {
-				randomValue = 16;
-			} else if(randomValue == 4) {
-				randomValue = 8;
-			} else if(randomValue == 3) {
-				randomValue = 4;
-			}
-		} else if(currentMaxTileValue >= 2048) {
-			randomValue = random.nextInt(6) + 1;
-			if(randomValue == 6) {
-				randomValue = 32;
-			} else if(randomValue == 5) {
-				randomValue = 16;
-			} else if(randomValue == 4) {
-				randomValue = 8;
-			} else if(randomValue == 3) {
-				randomValue = 4;
-			}
-		}
-		
-		if(freeGridBlocks.size > 2) {
-			int randomBlock = random.nextInt(freeGridBlocks.size);
-			randomX = freeGridBlocks.get(randomBlock).getX();
-			randomY = freeGridBlocks.get(randomBlock).getY();
-			if(randomX != oldX && randomY != oldY) {
-				block = new Block(randomX, randomY, 96, 96, randomValue);
-				randomX = randomX / 96 + 1;
-				randomY = randomY / 96 + 1;
+
+			if(freeGridBlocks.size > 2) {
+				int randomBlock = random.nextInt(freeGridBlocks.size);
+				randomX = freeGridBlocks.get(randomBlock).getX();
+				randomY = freeGridBlocks.get(randomBlock).getY();
+				if(randomX != oldX && randomY != oldY) {
+					block = new Block(randomX, randomY, 96, 96, randomValue);
+					randomX = randomX / 96 + 1;
+					randomY = randomY / 96 + 1;
+				} else {
+					block = new Block(oldX, oldY, 96, 96, randomValue);
+				}
 			} else {
 				block = new Block(oldX, oldY, 96, 96, randomValue);
 			}
-		} else {
-			block = new Block(oldX, oldY, 96, 96, randomValue);
-		}
 
-		elapsedTime = 0;
-		if(block != null) {
-			blocks.add(block);
-		}
+			elapsedTime = 0;
+			if(block != null) {
+				blocks.add(block);
+			}
 
-		block = null;
-		direction = -1;
-		moved = false;
+			block = null;
+			direction = -1;
+			moved = false;
 		}
 		stageOfLoop = 6;
 	}
@@ -514,7 +502,8 @@ public class Grid {
 			block = null;
 			a = null;
 			b = null;
-			bell.play();
+			if(!muted)
+				bell.play();
 		}
 	}
 	
@@ -525,7 +514,8 @@ public class Grid {
 		b.setSelected(false);
 		mergeAnimation = true;
 		moved = true;
-		swish.play();
+		if(!muted)
+			swish.play();
 	}
 	
 	public void checkBounds() {

@@ -28,6 +28,9 @@ public class TextureManager {
 	public Texture b2048 = new Texture(Gdx.files.internal("block/2048.png"));
 	public Texture b4096 = new Texture(Gdx.files.internal("block/4096.png"));
 	public Texture b8192 = new Texture(Gdx.files.internal("block/8192.png"));
+	public Texture b16384 = new Texture(Gdx.files.internal("block/16384.png"));
+	public Texture b32768 = new Texture(Gdx.files.internal("block/32768.png"));
+	public Texture b65536 = new Texture(Gdx.files.internal("block/65536.png"));
 	
 	public Sprite logga = new Sprite(new Texture("logga_med-ring-runt-final.png"));
 	
@@ -89,6 +92,12 @@ public class TextureManager {
 			current = b4096;
 		} else if(val == 8192) {
 			current = b8192;
+		} else if(val == 16385) {
+			current = b16384;
+		} else if(val == 32768) {
+			current = b32768;
+		} else if(val == 65536) {
+			current = b65536;
 		}
 		
 		return current;
